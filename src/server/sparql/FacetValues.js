@@ -5,8 +5,8 @@ import {
   facetValuesQueryTimespan,
   facetValuesRange
 } from './SparqlQueriesGeneral'
-import { prefixes } from './sampo/SparqlQueriesPrefixes'
-import { facetConfigs, endpoint } from './sampo/FacetConfigsSampo'
+import { prefixes } from './history/SparqlQueriesPrefixes'
+import { facetConfigs, endpoint } from './history/FacetConfigs'
 import {
   hasPreviousSelections,
   hasPreviousSelectionsFromOtherFacets,
@@ -122,7 +122,7 @@ export const getFacet = async ({
     q = q.replace('<START_PROPERTY>', facetConfig.startProperty)
     q = q.replace('<END_PROPERTY>', facetConfig.endProperty)
   }
-  // console.log(prefixes + q)
+   console.log(prefixes + q)
   const response = await runSelectQuery({
     query: prefixes + q,
     endpoint,

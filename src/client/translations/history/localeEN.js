@@ -2,7 +2,7 @@ export default {
   languageLabel: 'English',
   appTitle: {
     short: 'sampo',
-    long: 'Sampo Semantic Portal',
+    long: 'HistorySampo',
     subheading: `
     "Here to forge for us the Sampo,
     Hammer us the lid in colors"
@@ -81,9 +81,9 @@ export default {
   },
   perspectives: {
     events: {
-      label: 'Perspective 1',
-      facetResultsType: 'manuscripts',
-      shortDescription: 'Perspective1 description',
+      label: 'Events',
+      facetResultsType: 'events',
+      shortDescription: 'Historical events',
       longDescription: `
         <p class="MuiTypography-root MuiTypography-body1 MuiTypography-paragraph">
           Use this perspective to access data related to physical manuscript objects.
@@ -156,6 +156,14 @@ export default {
         prefLabel: {
           label: 'Label',
           description: 'A short label describing the manuscript.'
+        },
+        field: {
+          label: 'Field',
+          description: 'A field of history'
+        },
+        subjectKeyWord: {
+          label: 'Subject',
+          description: 'Subjectmatter keyword'
         },
         author: {
           label: 'Author',

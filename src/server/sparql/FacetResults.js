@@ -1,6 +1,6 @@
 import { runSelectQuery } from './SparqlApi'
 import { runNetworkQuery } from './NetworkApi'
-import { prefixes } from './sampo/SparqlQueriesPrefixes'
+import { prefixes } from './history/SparqlQueriesPrefixes'
 import {
   countQuery,
   facetResultSetQuery,
@@ -24,10 +24,13 @@ import {
   actorsAt,
   allPlacesQuery
 } from './sampo/SparqlQueriesPlaces'
-import { facetConfigs, endpoint } from './sampo/FacetConfigsSampo'
+import { facetConfigs, endpoint } from './history/FacetConfigs'
 import { mapCount, mapPlaces } from './Mappers'
 import { makeObjectList } from './SparqlObjectMapper'
 import { generateConstraintsBlock } from './Filters'
+import {
+  eventsPropertiesFacetResults
+} from './history/SparqlQueriesEvents'
 
 export const getPaginatedResults = async ({
   resultClass,
@@ -209,6 +212,9 @@ const getPaginatedData = ({
   q = q.replace('<PAGE>', `LIMIT ${pagesize} OFFSET ${page * pagesize}`)
   let resultSetProperties
   switch (resultClass) {
+    case 'events':
+      resultSetProperties = eventsPropertiesFacetResults
+      break
     case 'perspective1':
       resultSetProperties = manuscriptPropertiesFacetResults
       break

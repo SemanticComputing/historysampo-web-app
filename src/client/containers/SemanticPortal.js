@@ -22,13 +22,13 @@ import Main from '../components/main_layout/Main'
 import Footer from '../components/main_layout/Footer'
 import FacetBar from '../components/facet_bar/FacetBar'
 import Events from '../components/perspectives/history/Events'
-import Perspective1 from '../components/perspectives/sampo/Perspective1'
-import Perspective2 from '../components/perspectives/sampo/Perspective2'
-import Perspective3 from '../components/perspectives/sampo/Perspective3'
+// import Perspective1 from '../components/perspectives/sampo/Perspective1'
+// import Perspective2 from '../components/perspectives/sampo/Perspective2'
+// import Perspective3 from '../components/perspectives/sampo/Perspective3'
 import All from '../components/perspectives/sampo/All'
-import { perspectiveConfig } from '../configs/sampo/PerspectiveConfig'
-import { perspectiveConfigOnlyInfoPages } from '../configs/sampo/PerspectiveConfigOnlyInfoPages'
-import { rootUrl } from '../configs/sampo/GeneralConfig'
+import { perspectiveConfig } from '../configs/history/PerspectiveConfig'
+import { perspectiveConfigOnlyInfoPages } from '../configs/history/PerspectiveConfigOnlyInfoPages'
+import { rootUrl } from '../configs/history/GeneralConfig'
 import {
   fetchResultCount,
   fetchPaginatedResults,
@@ -209,66 +209,6 @@ const SemanticPortal = props => {
             perspective={perspective}
             animationValue={props.animationValue}
             animateMap={props.animateMap}
-            screenSize={screenSize}
-            rootUrl={rootUrl}
-          />
-        break
-      case 'perspective1':
-        perspectiveElement =
-          <Perspective1
-            perspective1={props.perspective1}
-            places={props.places}
-            leafletMapLayers={props.leafletMapLayers}
-            facetData={props.perspective1Facets}
-            fetchPaginatedResults={props.fetchPaginatedResults}
-            fetchResults={props.fetchResults}
-            fetchGeoJSONLayers={props.fetchGeoJSONLayers}
-            fetchByURI={props.fetchByURI}
-            updatePage={props.updatePage}
-            updateRowsPerPage={props.updateRowsPerPage}
-            updateFacetOption={props.updateFacetOption}
-            sortResults={props.sortResults}
-            routeProps={routeProps}
-            perspective={perspective}
-            animationValue={props.animationValue}
-            animateMap={props.animateMap}
-            screenSize={screenSize}
-            rootUrl={rootUrl}
-          />
-        break
-      case 'perspective2':
-        perspectiveElement =
-          <Perspective2
-            perspective2={props.perspective2}
-            places={props.places}
-            facetData={props.perspective2Facets}
-            fetchPaginatedResults={props.fetchPaginatedResults}
-            fetchResults={props.fetchResults}
-            fetchByURI={props.fetchByURI}
-            updatePage={props.updatePage}
-            updateRowsPerPage={props.updateRowsPerPage}
-            sortResults={props.sortResults}
-            routeProps={routeProps}
-            perspective={perspective}
-            screenSize={screenSize}
-            rootUrl={rootUrl}
-          />
-        break
-      case 'perspective3':
-        perspectiveElement =
-          <Perspective3
-            perspective3={props.perspective3}
-            places={props.places}
-            facetData={props.perspective3Facets}
-            fetchPaginatedResults={props.fetchPaginatedResults}
-            fetchResults={props.fetchResults}
-            fetchByURI={props.fetchByURI}
-            updatePage={props.updatePage}
-            updateRowsPerPage={props.updateRowsPerPage}
-            updateFacetOption={props.updateFacetOption}
-            sortResults={props.sortResults}
-            routeProps={routeProps}
-            perspective={perspective}
             screenSize={screenSize}
             rootUrl={rootUrl}
           />
@@ -494,13 +434,6 @@ const mapStateToProps = state => {
   return {
     events: state.events,
     eventsFacets: state.eventsFacets,
-    perspective1: state.perspective1,
-    perspective1Facets: state.perspective1Facets,
-    perspective1FacetsConstrainSelf: state.perspective1FacetsConstrainSelf,
-    perspective2: state.perspective2,
-    perspective2Facets: state.perspective2Facets,
-    perspective3: state.perspective3,
-    perspective3Facets: state.perspective3Facets,
     places: state.places,
     leafletMapLayers: state.leafletMapLayers,
     clientSideFacetedSearch: state.clientSideFacetedSearch,
@@ -537,13 +470,6 @@ SemanticPortal.propTypes = {
   error: PropTypes.object.isRequired,
   events: PropTypes.object.isRequired,
   eventsFacets: PropTypes.object.isRequired,
-  perspective1: PropTypes.object.isRequired,
-  perspective1Facets: PropTypes.object.isRequired,
-  perspective1FacetsConstrainSelf: PropTypes.object.isRequired,
-  perspective2: PropTypes.object.isRequired,
-  perspective2Facets: PropTypes.object.isRequired,
-  perspective3: PropTypes.object.isRequired,
-  perspective3Facets: PropTypes.object.isRequired,
   places: PropTypes.object.isRequired,
   leafletMapLayers: PropTypes.object.isRequired,
   animationValue: PropTypes.array.isRequired,

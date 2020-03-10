@@ -110,7 +110,7 @@ export const INITIAL_STATE = {
   }
 }
 
-const eventsFacets = (state = INITIAL_STATE, action) => {
+const perspective3Facets = (state = INITIAL_STATE, action) => {
   if (action.facetClass === 'events') {
     switch (action.type) {
       case FETCH_FACET:
@@ -127,4 +127,4 @@ const eventsFacets = (state = INITIAL_STATE, action) => {
   } else return state
 }
 
-export default eventsFacets
+export default perspective3Facets
