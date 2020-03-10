@@ -11,9 +11,9 @@ import {
 } from 'rxjs/operators'
 import { combineEpics, ofType } from 'redux-observable'
 import intl from 'react-intl-universal'
-import localeEN from '../translations/sampo/localeEN'
-import localeFI from '../translations/sampo/localeFI'
-import localeSV from '../translations/sampo/localeSV'
+import localeEN from '../translations/history/localeEN'
+import localeFI from '../translations/history/localeFI'
+import localeSV from '../translations/history/localeSV'
 import { stateToUrl, handleAxiosError } from '../helpers/helpers'
 import querystring from 'querystring'
 import {

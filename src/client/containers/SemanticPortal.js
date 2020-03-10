@@ -21,6 +21,7 @@ import Message from '../components/main_layout/Message'
 import Main from '../components/main_layout/Main'
 import Footer from '../components/main_layout/Footer'
 import FacetBar from '../components/facet_bar/FacetBar'
+import Events from '../components/perspectives/history/Events'
 import Perspective1 from '../components/perspectives/sampo/Perspective1'
 import Perspective2 from '../components/perspectives/sampo/Perspective2'
 import Perspective3 from '../components/perspectives/sampo/Perspective3'
@@ -189,6 +190,29 @@ const SemanticPortal = props => {
   const renderPerspective = (perspective, routeProps) => {
     let perspectiveElement = null
     switch (perspective.id) {
+      case 'events':
+        perspectiveElement =
+          <Events
+            events={props.events}
+            places={props.places}
+            leafletMapLayers={props.leafletMapLayers}
+            facetData={props.eventsFacets}
+            fetchPaginatedResults={props.fetchPaginatedResults}
+            fetchResults={props.fetchResults}
+            fetchGeoJSONLayers={props.fetchGeoJSONLayers}
+            fetchByURI={props.fetchByURI}
+            updatePage={props.updatePage}
+            updateRowsPerPage={props.updateRowsPerPage}
+            updateFacetOption={props.updateFacetOption}
+            sortResults={props.sortResults}
+            routeProps={routeProps}
+            perspective={perspective}
+            animationValue={props.animationValue}
+            animateMap={props.animateMap}
+            screenSize={screenSize}
+            rootUrl={rootUrl}
+          />
+        break
       case 'perspective1':
         perspectiveElement =
           <Perspective1
@@ -468,6 +492,8 @@ const SemanticPortal = props => {
 
 const mapStateToProps = state => {
   return {
+    events: state.events,
+    eventsFacets: state.eventsFacets,
     perspective1: state.perspective1,
     perspective1Facets: state.perspective1Facets,
     perspective1FacetsConstrainSelf: state.perspective1FacetsConstrainSelf,
@@ -509,6 +535,8 @@ SemanticPortal.propTypes = {
   theme: PropTypes.object.isRequired,
   options: PropTypes.object.isRequired,
   error: PropTypes.object.isRequired,
+  events: PropTypes.object.isRequired,
+  eventsFacets: PropTypes.object.isRequired,
   perspective1: PropTypes.object.isRequired,
   perspective1Facets: PropTypes.object.isRequired,
   perspective1FacetsConstrainSelf: PropTypes.object.isRequired,
