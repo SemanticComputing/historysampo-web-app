@@ -1,9 +1,9 @@
-# SampoSampo
+# Sampo-UI
 
 A software framework for implementing semantic portals. The following portals use this repository as a base:
 
 * [Mapping Manuscript Migrations](https://github.com/mapping-manuscript-migrations/mmm-web-app)
-* [WarVictimSampo 1914-1922](https://github.com/SemanticComputing/sotasurmat-web-app)
+* [WarVictimSampo 1914&ndash;1922](https://github.com/SemanticComputing/sotasurmat-web-app)
 * [LawSampo](https://github.com/SemanticComputing/lawsampo-web-app)
 * [AcademySampo](https://github.com/SemanticComputing/academysampo-web-app)
 * [FindSampo](https://github.com/SemanticComputing/findsampo-web-app) 
@@ -11,9 +11,9 @@ A software framework for implementing semantic portals. The following portals us
 
 ## Requirements
 
-* [Node.js® -- a JavaScript runtime built on Chrome's V8 JavaScript engine.](https://nodejs.org/en/) (tested with 10.15.3 LTS)
+* [Node.js® &ndash; a JavaScript runtime built on Chrome's V8 JavaScript engine.](https://nodejs.org/en/) (tested with 10.15.3 LTS)
 
-* [Nodemon -- monitor for any changes in your source and automatically restart your server](https://nodemon.io/)
+* [Nodemon &ndash; monitor for any changes in your source and automatically restart your server](https://nodemon.io/)
 
 If your home directory is mounted from a network drive, Node.js should
 be installed using Node Version Manager https://github.com/nvm-sh/nvm  
@@ -22,13 +22,13 @@ be installed using Node Version Manager https://github.com/nvm-sh/nvm
 
 ### Client
 
-* [React -- A JavaScript library for building user interfaces](https://reactjs.org/)
-* [Material-UI -- React components for faster and easier web development.](https://material-ui.com/)
-* [Redux -- A Predictable State Container for JS Apps](https://redux.js.org/)
+* [React &ndash; A JavaScript library for building user interfaces](https://reactjs.org/)
+* [Material-UI &ndash; React components for faster and easier web development.](https://material-ui.com/)
+* [Redux &ndash; A Predictable State Container for JS Apps](https://redux.js.org/)
 * [React Router](https://reacttraining.com/react-router/web/guides/quick-start)
-* [Leaflet -- a JavaScript library for interactive maps](https://leafletjs.com/) 
-* [Cytoscape -- an open source software platform for visualizing complex networks](https://cytoscape.org/)
-* [ApexCharts.js -- Open Source JavaScript Charts for your website](https://apexcharts.com/)
+* [Leaflet &ndash; a JavaScript library for interactive maps](https://leafletjs.com/) 
+* [Cytoscape &ndash; an open source software platform for visualizing complex networks](https://cytoscape.org/)
+* [ApexCharts.js &ndash; Open Source JavaScript Charts for your website](https://apexcharts.com/)
 
 ### Server
 
@@ -67,7 +67,7 @@ docker run -d -p 3006:3001 --name sampo-web-app sampo-web-app-image
 ## Set up a new project using this repository as a base, with the possibility of merging the new commits added to this repository
 
 1. Clone this repository:
-`git clone git@github.com:SemanticComputing/sampo-web-app.git`
+`git clone git@github.com:SemanticComputing/sampo-ui.git`
 
 2. Set up a new GitHub repository. Do not initialize it with anything. It needs to be an empty repository.
 You can name it how you like and you can rename your local folder to match that.
@@ -86,7 +86,7 @@ You can name it how you like and you can rename your local folder to match that.
 `git push`
 
 8. Set the original repository (sampo-web-app) as the upstream of your new repository:
-`git remote add upstream git@github.com:SemanticComputing/sampo-web-app.git`
+`git remote add upstream git@github.com:SemanticComputing/sampo-ui.git`
 
 9. When new commits appear on the original repository (sampo-web-app) you can fetch them to your new repository.
 The example fetches only master branch:
