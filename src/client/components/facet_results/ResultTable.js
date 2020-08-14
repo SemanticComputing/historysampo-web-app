@@ -69,6 +69,10 @@ const styles = theme => ({
   }
 })
 
+/**
+ * A component for showing facet results as paginated table.
+ * Based on Material-UI's Table component.
+ */
 class ResultTable extends React.Component {
   constructor (props) {
     super(props)
@@ -91,7 +95,7 @@ class ResultTable extends React.Component {
     // then update app state and url accordingly
     this.props.updatePage(this.props.resultClass, page)
     history.push({
-      pathname: `/${this.props.resultClass}/faceted-search/table`,
+      pathname: `${this.props.rootUrl}/${this.props.resultClass}/faceted-search/table`,
       search: `?page=${page}`
     })
 
@@ -106,7 +110,7 @@ class ResultTable extends React.Component {
     if (prevProps.data.page !== this.props.data.page) {
       this.fetchResults()
       history.push({
-        pathname: `/${this.props.resultClass}/faceted-search/table`,
+        pathname: `${this.props.rootUrl}/${this.props.resultClass}/faceted-search/table`,
         search: `?page=${this.props.data.page}`
       })
     }
@@ -131,7 +135,7 @@ class ResultTable extends React.Component {
   }
 
   fetchResults = () => {
-    this.props.fetchPaginatedResults(this.props.resultClass, this.props.facetClass, this.props.data.sortBy, this.props.variant)
+    this.props.fetchPaginatedResults(this.props.resultClass, this.props.facetClass, this.props.data.sortBy)
   }
 
   needNewResults = prevProps => {
@@ -290,13 +294,15 @@ ResultTable.propTypes = {
   data: PropTypes.object.isRequired,
   resultClass: PropTypes.string.isRequired,
   facetClass: PropTypes.string.isRequired,
-  variant: PropTypes.string,
   facetUpdateID: PropTypes.number.isRequired,
   fetchPaginatedResults: PropTypes.func.isRequired,
   sortResults: PropTypes.func.isRequired,
   updatePage: PropTypes.func.isRequired,
   updateRowsPerPage: PropTypes.func.isRequired,
-  routeProps: PropTypes.object.isRequired
+  routeProps: PropTypes.object.isRequired,
+  rootUrl: PropTypes.string.isRequired
 }
+
+export const ResultTableComponent = ResultTable
 
 export default withStyles(styles)(ResultTable)

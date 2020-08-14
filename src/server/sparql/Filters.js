@@ -1,34 +1,37 @@
-import { facetConfigs } from './history/FacetConfigs'
+import { has } from 'lodash'
 
 export const hasPreviousSelections = (constraints, facetID) => {
   let hasPreviousSelections = false
-  for (const [key, value] of Object.entries(constraints)) {
-    if (key === facetID && value.filterType === 'uriFilter') {
+  constraints.map(facet => {
+    if (facet.facetID === facetID && facet.filterType === 'uriFilter') {
       hasPreviousSelections = true
     }
-  }
+  })
   return hasPreviousSelections
 }
 
 export const hasPreviousSelectionsFromOtherFacets = (constraints, facetID) => {
-  for (const [key, value] of Object.entries(constraints)) {
-    if (key !== facetID && value.filterType === 'uriFilter') {
-      return true
+  let hasPreviousSelectionsFromOtherFacets = false
+  constraints.map(facet => {
+    if (facet.facetID !== facetID && facet.filterType === 'uriFilter') {
+      hasPreviousSelectionsFromOtherFacets = true
     }
-  }
-  return false
+  })
+  return hasPreviousSelectionsFromOtherFacets
 }
 
 export const getUriFilters = (constraints, facetID) => {
-  for (const [key, value] of Object.entries(constraints)) {
-    if (key === facetID && value.filterType === 'uriFilter') {
-      return value.values
+  let filters = []
+  constraints.map(facet => {
+    if (facet.facetID === facetID && facet.filterType === 'uriFilter') {
+      filters = facet.values
     }
-  }
-  return []
+  })
+  return filters
 }
 
 export const generateConstraintsBlock = ({
+  backendSearchConfig,
   facetClass,
   constraints,
   filterTarget,
@@ -36,27 +39,17 @@ export const generateConstraintsBlock = ({
   inverse,
   constrainSelf = false
 }) => {
-  // delete constraints[facetID];
   let filterStr = ''
-  const constraintsArr = []
   const skipFacetID = constrainSelf ? '' : facetID
-  for (const [key, value] of Object.entries(constraints)) {
-    if (key !== skipFacetID) {
-      constraintsArr.push({
-        id: key,
-        filterType: value.filterType,
-        priority: value.priority,
-        values: value.values
-      })
-    }
-  }
-  constraintsArr.sort((a, b) => a.priority - b.priority)
-  constraintsArr.map(c => {
+  const modifiedConstraints = constraints.filter(facet => facet.facetID !== skipFacetID)
+  modifiedConstraints.sort((a, b) => a.priority - b.priority)
+  modifiedConstraints.map(c => {
     switch (c.filterType) {
       case 'textFilter':
         filterStr += generateTextFilter({
+          backendSearchConfig,
           facetClass: facetClass,
-          facetID: c.id,
+          facetID: c.facetID,
           filterTarget: filterTarget,
           queryString: c.values,
           inverse: inverse
@@ -64,17 +57,21 @@ export const generateConstraintsBlock = ({
         break
       case 'uriFilter':
         filterStr += generateUriFilter({
+          backendSearchConfig,
           facetClass: facetClass,
-          facetID: c.id,
+          facetID: c.facetID,
           filterTarget: filterTarget,
           values: c.values,
-          inverse: inverse
+          inverse: inverse,
+          selectAlsoSubconcepts: Object.prototype.hasOwnProperty.call(c, 'selectAlsoSubconcepts')
+            ? c.selectAlsoSubconcepts : true // default behaviour for hierarchical facets, can be controlled via reducers
         })
         break
       case 'spatialFilter':
         filterStr += generateSpatialFilter({
+          backendSearchConfig,
           facetClass: facetClass,
-          facetID: c.id,
+          facetID: c.facetID,
           filterTarget: filterTarget,
           values: c.values,
           inverse: inverse
@@ -83,8 +80,9 @@ export const generateConstraintsBlock = ({
       case 'timespanFilter':
       case 'dateFilter':
         filterStr += generateTimespanFilter({
+          backendSearchConfig,
           facetClass: facetClass,
-          facetID: c.id,
+          facetID: c.facetID,
           filterTarget: filterTarget,
           values: c.values,
           inverse: inverse
@@ -93,8 +91,9 @@ export const generateConstraintsBlock = ({
       case 'integerFilter':
       case 'integerFilterRange':
         filterStr += generateIntegerFilter({
+          backendSearchConfig,
           facetClass: facetClass,
-          facetID: c.id,
+          facetID: c.facetID,
           filterTarget: filterTarget,
           values: c.values,
           inverse: inverse
@@ -106,13 +105,14 @@ export const generateConstraintsBlock = ({
 }
 
 const generateTextFilter = ({
+  backendSearchConfig,
   facetClass,
   facetID,
   filterTarget,
   queryString,
   inverse
 }) => {
-  const facetConfig = facetConfigs[facetClass][facetID]
+  const facetConfig = backendSearchConfig[facetClass].facets[facetID]
   let filterStr = ''
   if (facetConfig.textQueryPredicate === '') {
     filterStr = `?${filterTarget} text:query (${facetConfig.textQueryProperty} '${queryString}') .`
@@ -135,6 +135,7 @@ const generateTextFilter = ({
 }
 
 const generateSpatialFilter = ({
+  backendSearchConfig,
   facetClass,
   facetID,
   filterTarget,
@@ -144,7 +145,7 @@ const generateSpatialFilter = ({
   const { latMin, longMin, latMax, longMax } = values
   const filterStr = `
     ?${facetID}Filter spatial:withinBox (${latMin} ${longMin} ${latMax} ${longMax} 1000000) .
-    ?${filterTarget} ${facetConfigs[facetClass][facetID].predicate} ?${facetID}Filter .
+    ?${filterTarget} ${backendSearchConfig[facetClass].facets[facetID].predicate} ?${facetID}Filter .
   `
   if (inverse) {
     return `
@@ -158,16 +159,22 @@ const generateSpatialFilter = ({
 }
 
 const generateTimespanFilter = ({
+  backendSearchConfig,
   facetClass,
   facetID,
   filterTarget,
   values,
   inverse
 }) => {
-  const facetConfig = facetConfigs[facetClass][facetID]
+  const facetConfig = backendSearchConfig[facetClass].facets[facetID]
   const { start, end } = values
-  const selectionStart = start
-  const selectionEnd = end
+  let selectionStart = start
+  let selectionEnd = end
+  const dataType = has(facetConfig, 'dataType') ? facetConfig.dataType : 'xsd:date'
+  if (dataType === 'xsd:dateTime') {
+    selectionStart = `${selectionStart}T00:00:00Z`
+    selectionEnd = `${selectionEnd}T00:00:00Z`
+  }
   // return `
   //   ?${filterTarget} ${facetConfig.predicate} ?timespan .
   //   ?timespan ${facetConfig.startProperty} ?start .
@@ -182,9 +189,9 @@ const generateTimespanFilter = ({
     ?${facetID} ${facetConfig.endProperty} ?${facetID}End .
     # either start or end is in selected range
     FILTER(
-      ?${facetID}Start >= "${selectionStart}"^^xsd:date && ?${facetID}Start <= "${selectionEnd}"^^xsd:date
+      ?${facetID}Start >= "${selectionStart}"^^${dataType} && ?${facetID}Start <= "${selectionEnd}"^^${dataType}
       ||
-      ?${facetID}End >= "${selectionStart}"^^xsd:date && ?${facetID}End <= "${selectionEnd}"^^xsd:date
+      ?${facetID}End >= "${selectionStart}"^^${dataType} && ?${facetID}End <= "${selectionEnd}"^^${dataType}
     )
   `
   if (inverse) {
@@ -199,13 +206,14 @@ const generateTimespanFilter = ({
 }
 
 const generateIntegerFilter = ({
+  backendSearchConfig,
   facetClass,
   facetID,
   filterTarget,
   values,
   inverse
 }) => {
-  const facetConfig = facetConfigs[facetClass][facetID]
+  const facetConfig = backendSearchConfig[facetClass].facets[facetID]
   const { start, end } = values
   let integerFilter = ''
   if (start === '') {
@@ -233,20 +241,23 @@ const generateIntegerFilter = ({
 }
 
 const generateUriFilter = ({
+  backendSearchConfig,
   facetClass,
   facetID,
   filterTarget,
   values,
-  inverse
+  inverse,
+  selectAlsoSubconcepts
 }) => {
   let s = ''
-  const addChildren = facetConfigs[facetClass][facetID].type === 'hierarchical'
-  const literal = facetConfigs[facetClass][facetID].literal
+  const facetConfig = backendSearchConfig[facetClass].facets[facetID]
+  const includeChildren = facetConfig.type === 'hierarchical' && selectAlsoSubconcepts
+  const literal = facetConfig.literal
   const valuesStr = literal ? `"${values.join('" "')}"` : `<${values.join('> <')}></$>`
-  if (addChildren) {
+  if (includeChildren) {
     s = `
          VALUES ?${facetID}Filter { ${valuesStr} }
-         ?${facetID}FilterWithChildren ${facetConfigs[facetClass][facetID].parentProperty}* ?${facetID}Filter .
+         ?${facetID}FilterWithChildren ${facetConfig.parentProperty}* ?${facetID}Filter .
      `
   } else {
     s = `
@@ -256,27 +267,28 @@ const generateUriFilter = ({
   if (inverse) {
     s += `
        FILTER NOT EXISTS {
-         ?${filterTarget} ${facetConfigs[facetClass][facetID].predicate} ?${facetID}Filter .
-         ?${filterTarget} ${facetConfigs[facetClass][facetID].predicate} ?id .
+         ?${filterTarget} ${facetConfig.predicate} ?${facetID}Filter .
+         ?${filterTarget} ${facetConfig.predicate} ?id .
        }
      `
   } else {
-    const filterValue = addChildren
+    const filterValue = includeChildren
       ? `?${facetID}FilterWithChildren`
       : `?${facetID}Filter`
     s += `
-       ?${filterTarget} ${facetConfigs[facetClass][facetID].predicate} ${filterValue} .
+       ?${filterTarget} ${facetConfig.predicate} ${filterValue} .
      `
   }
   return s
 }
 
 export const generateSelectedFilter = ({
+  backendSearchConfig,
   facetID,
   constraints,
   inverse
 }) => {
   return (`
-      FILTER(?id ${inverse ? 'NOT' : ''} IN ( <${getUriFilters(constraints, facetID).join('>, <')}> ))
+          FILTER(?id ${inverse ? 'NOT' : ''} IN ( <${getUriFilters(constraints, facetID).join('>, <')}> ))
   `)
 }

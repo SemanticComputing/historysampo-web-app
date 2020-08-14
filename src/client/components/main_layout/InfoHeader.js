@@ -1,9 +1,9 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 import { withStyles } from '@material-ui/core/styles'
-import ExpansionPanel from '@material-ui/core/ExpansionPanel'
-import ExpansionPanelSummary from '@material-ui/core/ExpansionPanelSummary'
-import ExpansionPanelDetails from '@material-ui/core/ExpansionPanelDetails'
+import Accordion from '@material-ui/core/Accordion'
+import AccordionSummary from '@material-ui/core/AccordionSummary'
+import AccordionDetails from '@material-ui/core/AccordionDetails'
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore'
 import Typography from '@material-ui/core/Typography'
 import Grid from '@material-ui/core/Grid'
@@ -49,6 +49,9 @@ const styles = theme => ({
   }
 })
 
+/**
+ * A component for instructions for a faceted search perspective or an entity landing page.
+ */
 const InfoHeader = props => {
   const handleExpandButtonOnClick = () => {
     props.updateExpanded({
@@ -67,11 +70,11 @@ const InfoHeader = props => {
 
   return (
     <Grid container spacing={1} className={props.classes.root}>
-      <ExpansionPanel
+      <Accordion
         className={props.classes.panel}
         expanded={props.expanded}
       >
-        <ExpansionPanelSummary
+        <AccordionSummary
           className={props.classes.summary}
           classes={{
             content: props.classes.summaryContent
@@ -89,8 +92,8 @@ const InfoHeader = props => {
             <>
               <Typography className={props.classes.label} component='h1' variant='h6'>{generateLabel()}</Typography>
             </>}
-        </ExpansionPanelSummary>
-        <ExpansionPanelDetails
+        </AccordionSummary>
+        <AccordionDetails
           className={props.classes.content}
           style={{ height: props.descriptionHeight }}
         >
@@ -102,8 +105,8 @@ const InfoHeader = props => {
               {intl.getHTML(`perspectives.${props.resultClass}.instancePage.description`)}
               {intl.getHTML('instancePageGeneral.repetition')}
             </>}
-        </ExpansionPanelDetails>
-      </ExpansionPanel>
+        </AccordionDetails>
+      </Accordion>
     </Grid>
   )
 }
@@ -117,5 +120,7 @@ InfoHeader.propTypes = {
   updateExpanded: PropTypes.func.isRequired,
   descriptionHeight: PropTypes.number.isRequired
 }
+
+export const InfoHeaderComponent = InfoHeader
 
 export default withStyles(styles)(InfoHeader)

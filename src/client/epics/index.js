@@ -14,7 +14,7 @@ import intl from 'react-intl-universal'
 import localeEN from '../translations/history/localeEN'
 import localeFI from '../translations/history/localeFI'
 import localeSV from '../translations/history/localeSV'
-import { stateToUrl, handleAxiosError } from '../helpers/helpers'
+import { stateToUrl, handleAxiosError, pickSelectedDatasets /* boundsToValues */ } from '../helpers/helpers'
 import querystring from 'querystring'
 import {
   FETCH_RESULT_COUNT,
@@ -22,7 +22,7 @@ import {
   FETCH_PAGINATED_RESULTS,
   FETCH_PAGINATED_RESULTS_FAILED,
   FETCH_RESULTS,
-  FETCH_RESULTS_CLIENT_SIDE,
+  FETCH_FULL_TEXT_RESULTS,
   FETCH_RESULTS_FAILED,
   FETCH_BY_URI,
   FETCH_BY_URI_FAILED,
@@ -32,16 +32,24 @@ import {
   FETCH_SIMILAR_DOCUMENTS_BY_ID_FAILED,
   FETCH_FACET_FAILED,
   FETCH_GEOJSON_LAYERS,
+  FETCH_NETWORK_BY_ID,
+  FETCH_NETWORK_BY_ID_FAILED,
+  FETCH_GEOJSON_LAYERS_BACKEND,
+  CLIENT_FS_FETCH_RESULTS,
+  CLIENT_FS_FETCH_RESULTS_FAILED,
   LOAD_LOCALES,
   updateResultCount,
   updatePaginatedResults,
   updateResults,
+  clientFSUpdateResults,
   updateInstance,
   updateInstanceRelatedData,
+  updateInstanceNetworkData,
   updateFacetValues,
   updateFacetValuesConstrainSelf,
   updateLocale,
-  updateGeoJSONLayers
+  updateGeoJSONLayers,
+  SHOW_ERROR
 } from '../actions'
 import {
   rootUrl,
@@ -56,8 +64,8 @@ const port = window.location.hostname === 'localhost' || window.location.hostnam
   : ''
 
 export const apiUrl = (process.env.NODE_ENV === 'development')
-  ? `http://localhost:3001${rootUrl}/api/`
-  : `${window.location.protocol}//${window.location.hostname}${port}${rootUrl}/api/`
+  ? `http://localhost:3001${rootUrl}/api/v1`
+  : `${window.location.protocol}//${window.location.hostname}${port}${rootUrl}/api/v1`
 
 export const availableLocales = {
   en: localeEN,
@@ -79,16 +87,24 @@ const fetchPaginatedResultsEpic = (action$, state$) => action$.pipe(
       sortBy: sortBy,
       sortDirection: sortDirection
     })
-    const requestUrl = `${apiUrl}${resultClass}/paginated?${params}`
+    const requestUrl = `${apiUrl}/faceted-search/${resultClass}/paginated`
     // https://rxjs-dev.firebaseapp.com/api/ajax/ajax
-    return ajax.getJSON(requestUrl).pipe(
-      map(response => updatePaginatedResults({
-        resultClass: response.resultClass,
-        page: response.page,
-        pagesize: response.pagesize,
-        data: response.data,
-        sparqlQuery: response.sparqlQuery
-      })),
+    return ajax({
+      url: requestUrl,
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: params
+    }).pipe(
+      map(ajaxResponse =>
+        updatePaginatedResults({
+          resultClass: ajaxResponse.response.resultClass,
+          page: ajaxResponse.response.page,
+          pagesize: ajaxResponse.response.pagesize,
+          data: ajaxResponse.response.data,
+          sparqlQuery: ajaxResponse.response.sparqlQuery
+        })),
       // https://redux-observable.js.org/docs/recipes/ErrorHandling.html
       catchError(error => of({
         type: FETCH_PAGINATED_RESULTS_FAILED,
@@ -107,17 +123,27 @@ const fetchResultsEpic = (action$, state$) => action$.pipe(
   ofType(FETCH_RESULTS),
   withLatestFrom(state$),
   mergeMap(([action, state]) => {
-    const { resultClass, facetClass } = action
+    const { resultClass, facetClass, limit, optimize } = action
     const params = stateToUrl({
       facets: state[`${facetClass}Facets`].facets,
-      facetClass: facetClass
+      facetClass,
+      limit,
+      optimize
     })
-    const requestUrl = `${apiUrl}${resultClass}/all?${params}`
-    return ajax.getJSON(requestUrl).pipe(
-      map(response => updateResults({
+    const requestUrl = `${apiUrl}/faceted-search/${resultClass}/all`
+    // https://rxjs-dev.firebaseapp.com/api/ajax/ajax
+    return ajax({
+      url: requestUrl,
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: params
+    }).pipe(
+      map(ajaxResponse => updateResults({
         resultClass: resultClass,
-        data: response.data,
-        sparqlQuery: response.sparqlQuery
+        data: ajaxResponse.response.data,
+        sparqlQuery: ajaxResponse.response.sparqlQuery
       })),
       catchError(error => of({
         type: FETCH_RESULTS_FAILED,
@@ -138,15 +164,21 @@ const fetchResultCountEpic = (action$, state$) => action$.pipe(
   mergeMap(([action, state]) => {
     const { resultClass, facetClass } = action
     const params = stateToUrl({
-      facets: state[`${facetClass}Facets`].facets,
-      facetClass: facetClass
+      facets: state[`${facetClass}Facets`].facets
     })
-    const requestUrl = `${apiUrl}${resultClass}/count?${params}`
-    return ajax.getJSON(requestUrl).pipe(
-      map(response => updateResultCount({
-        resultClass: response.resultClass,
-        data: response.data,
-        sparqlQuery: response.sparqlQuery
+    const requestUrl = `${apiUrl}/faceted-search/${resultClass}/count`
+    return ajax({
+      url: requestUrl,
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: params
+    }).pipe(
+      map(ajaxResponse => updateResultCount({
+        resultClass: ajaxResponse.response.resultClass,
+        data: ajaxResponse.response.data,
+        sparqlQuery: ajaxResponse.response.sparqlQuery
       })),
       catchError(error => of({
         type: FETCH_RESULT_COUNT_FAILED,
@@ -161,22 +193,15 @@ const fetchResultCountEpic = (action$, state$) => action$.pipe(
   })
 )
 
-const fetchResultsClientSideEpic = (action$, state$) => action$.pipe(
-  ofType(FETCH_RESULTS_CLIENT_SIDE),
+const fullTextSearchEpic = (action$, state$) => action$.pipe(
+  ofType(FETCH_FULL_TEXT_RESULTS),
   withLatestFrom(state$),
   debounceTime(500),
   switchMap(([action, state]) => {
-    const searchUrl = apiUrl + 'search'
-    let requestUrl = ''
-    if (action.jenaIndex === 'text') {
-      requestUrl = `${searchUrl}?q=${action.query}`
-    } else if (action.jenaIndex === 'spatial') {
-      const { latMin, longMin, latMax, longMax } = state.map
-      requestUrl = `${searchUrl}?latMin=${latMin}&longMin=${longMin}&latMax=${latMax}&longMax=${longMax}`
-    }
+    const requestUrl = `${apiUrl}/full-text-search?q=${action.query}`
     return ajax.getJSON(requestUrl).pipe(
       map(response => updateResults({
-        resultClass: 'all',
+        resultClass: 'fullText',
         data: response.data,
         sparqlQuery: response.sparqlQuery,
         query: action.query,
@@ -184,7 +209,7 @@ const fetchResultsClientSideEpic = (action$, state$) => action$.pipe(
       })),
       catchError(error => of({
         type: FETCH_RESULTS_FAILED,
-        resultClass: 'all',
+        resultClass: 'fullText',
         error: error,
         message: {
           text: backendErrorText,
@@ -202,14 +227,21 @@ const fetchByURIEpic = (action$, state$) => action$.pipe(
     const { resultClass, facetClass, uri } = action
     const params = stateToUrl({
       facets: facetClass == null ? null : state[`${facetClass}Facets`].facets,
-      facetClass: facetClass
+      facetClass
     })
-    const requestUrl = `${apiUrl}${resultClass}/instance/${encodeURIComponent(uri)}?${params}`
-    return ajax.getJSON(requestUrl).pipe(
-      map(response => updateInstance({
+    const requestUrl = `${apiUrl}/${resultClass}/page/${encodeURIComponent(uri)}`
+    return ajax({
+      url: requestUrl,
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: params
+    }).pipe(
+      map(ajaxResponse => updateInstance({
         resultClass: resultClass,
-        data: response.data,
-        sparqlQuery: response.sparqlQuery
+        data: ajaxResponse.response.data,
+        sparqlQuery: ajaxResponse.response.sparqlQuery
       })),
       catchError(error => of({
         type: FETCH_BY_URI_FAILED,
@@ -237,19 +269,26 @@ const fetchFacetEpic = (action$, state$) => action$.pipe(
       sortBy: sortBy,
       sortDirection: sortDirection
     })
-    const requestUrl = `${apiUrl}${action.facetClass}/facet/${facetID}?${params}`
-    return ajax.getJSON(requestUrl).pipe(
-      map(res => updateFacetValues({
+    const requestUrl = `${apiUrl}/faceted-search/${action.facetClass}/facet/${facetID}`
+    return ajax({
+      url: requestUrl,
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: params
+    }).pipe(
+      map(ajaxResponse => updateFacetValues({
         facetClass: facetClass,
-        id: facetID,
-        data: res.data || [],
-        flatData: res.flatData || [],
-        sparqlQuery: res.sparqlQuery
+        id: ajaxResponse.response.id,
+        data: ajaxResponse.response.data || [],
+        flatData: ajaxResponse.response.flatData || [],
+        sparqlQuery: ajaxResponse.response.sparqlQuery
       })),
       catchError(error => of({
         type: FETCH_FACET_FAILED,
-        resultClass: action.resultClass,
-        id: action.id,
+        facetClass,
+        facetID,
         error: error,
         message: {
           text: backendErrorText,
@@ -274,19 +313,58 @@ const fetchFacetConstrainSelfEpic = (action$, state$) => action$.pipe(
       sortDirection: sortDirection,
       constrainSelf: true
     })
-    const requestUrl = `${apiUrl}${action.facetClass}/facet/${facetID}?${params}`
-    return ajax.getJSON(requestUrl).pipe(
-      map(res => updateFacetValuesConstrainSelf({
+    const requestUrl = `${apiUrl}/faceted-search/${action.facetClass}/facet/${facetID}`
+    return ajax({
+      url: requestUrl,
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: params
+    }).pipe(
+      map(ajaxResponse => updateFacetValuesConstrainSelf({
         facetClass: facetClass,
         id: facetID,
-        data: res.data || [],
-        flatData: res.flatData || [],
-        sparqlQuery: res.sparqlQuery
+        data: ajaxResponse.response.data || [],
+        flatData: ajaxResponse.response.flatData || [],
+        sparqlQuery: ajaxResponse.response.sparqlQuery
       })),
       catchError(error => of({
         type: FETCH_FACET_FAILED,
         resultClass: action.facetClass,
         id: action.id,
+        error: error,
+        message: {
+          text: backendErrorText,
+          title: 'Error'
+        }
+      }))
+    )
+  })
+)
+
+const clientFSFetchResultsEpic = (action$, state$) => action$.pipe(
+  ofType(CLIENT_FS_FETCH_RESULTS),
+  withLatestFrom(state$),
+  debounceTime(500),
+  switchMap(([action, state]) => {
+    const { jenaIndex } = action
+    const selectedDatasets = pickSelectedDatasets(state.clientSideFacetedSearch.datasets)
+    const dsParams = selectedDatasets.map(ds => `dataset=${ds}`).join('&')
+    let requestUrl
+    if (action.jenaIndex === 'text') {
+      requestUrl = `${apiUrl}/federated-search?q=${action.query}&${dsParams}`
+    } else if (action.jenaIndex === 'spatial') {
+      const { latMin, longMin, latMax, longMax } = state.leafletMap
+      requestUrl = `${apiUrl}/federated-search?latMin=${latMin}&longMin=${longMin}&latMax=${latMax}&longMax=${longMax}&${dsParams}`
+    }
+    return ajax.getJSON(requestUrl).pipe(
+      map(response => clientFSUpdateResults({
+        results: response,
+        jenaIndex
+      })),
+      catchError(error => of({
+        type: CLIENT_FS_FETCH_RESULTS_FAILED,
         error: error,
         message: {
           text: backendErrorText,
@@ -334,7 +412,63 @@ const fetchSimilarDocumentsEpic = (action$, state$) => action$.pipe(
   })
 )
 
-const fetchGeoJSONLayers = action$ => action$.pipe(
+const fetchNetworkByURIEpic = (action$, state$) => action$.pipe(
+  ofType(FETCH_NETWORK_BY_ID),
+  withLatestFrom(state$),
+  mergeMap(([action]) => {
+    const { resultClass, id, limit, optimize } = action
+    const params = { limit, optimize }
+    const requestUrl = `${apiUrl}/${resultClass}/network/${encodeURIComponent(id)}?${querystring.stringify(params)}`
+    return ajax.getJSON(requestUrl).pipe(
+      map(response => updateInstanceNetworkData({
+        resultClass: resultClass,
+        data: response.data,
+        sparqlQuery: response.sparqlQuery
+      })),
+      catchError(error => of({
+        type: FETCH_NETWORK_BY_ID_FAILED,
+        resultClass: resultClass,
+        error: error,
+        message: {
+          text: backendErrorText,
+          title: 'Error'
+        }
+      }))
+    )
+  })
+)
+
+const fetchGeoJSONLayersBackendEpic = (action$, state$) => action$.pipe(
+  ofType(FETCH_GEOJSON_LAYERS_BACKEND),
+  withLatestFrom(state$),
+  mergeMap(([action]) => {
+    const { layerIDs /* bounds */ } = action
+    // const { latMin, longMin, latMax, longMax } = boundsToValues(bounds)
+    const params = {
+      layerID: layerIDs
+      // latMin,
+      // longMin,
+      // latMax,
+      // longMax
+    }
+    const requestUrl = `${apiUrl}/wfs?${querystring.stringify(params)}`
+    return ajax.getJSON(requestUrl).pipe(
+      map(res => updateGeoJSONLayers({
+        payload: res
+      })),
+      catchError(error => of({
+        type: SHOW_ERROR,
+        error: error,
+        message: {
+          text: backendErrorText,
+          title: 'Error'
+        }
+      }))
+    )
+  })
+)
+
+const fetchGeoJSONLayersEpic = action$ => action$.pipe(
   ofType(FETCH_GEOJSON_LAYERS),
   mergeMap(async action => {
     const { layerIDs, bounds } = action
@@ -344,7 +478,9 @@ const fetchGeoJSONLayers = action$ => action$.pipe(
 )
 
 const fetchGeoJSONLayer = async (layerID, bounds) => {
-  const baseUrl = 'http://kartta.nba.fi/arcgis/services/WFS/MV_Kulttuuriymparisto/MapServer/WFSServer'
+  const baseUrl = 'https://kartta.nba.fi/arcgis/services/WFS/MV_Kulttuuriymparisto/MapServer/WFSServer'
+  // const baseUrl = 'http://avaa.tdata.fi/geoserver/kotus/ows'
+  // const baseUrl = 'http://avaa.tdata.fi/geoserver/paituli/wfs'
   const boundsStr =
     `${bounds._southWest.lng},${bounds._southWest.lat},${bounds._northEast.lng},${bounds._northEast.lat}`
   const mapServerParams = {
@@ -355,6 +491,7 @@ const fetchGeoJSONLayer = async (layerID, bounds) => {
     srsName: 'EPSG:4326',
     outputFormat: 'geojson',
     bbox: boundsStr
+    // outputFormat: 'application/json' for kotus layers
   }
   const url = `${baseUrl}?${querystring.stringify(mapServerParams)}`
   try {
@@ -372,13 +509,16 @@ const rootEpic = combineEpics(
   fetchPaginatedResultsEpic,
   fetchResultsEpic,
   fetchResultCountEpic,
-  fetchResultsClientSideEpic,
   fetchByURIEpic,
   fetchFacetEpic,
   fetchFacetConstrainSelfEpic,
+  fetchNetworkByURIEpic,
+  fullTextSearchEpic,
+  clientFSFetchResultsEpic,
   loadLocalesEpic,
   fetchSimilarDocumentsEpic,
-  fetchGeoJSONLayers
+  fetchGeoJSONLayersEpic,
+  fetchGeoJSONLayersBackendEpic
 )
 
 export default rootEpic

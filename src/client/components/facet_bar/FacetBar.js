@@ -10,9 +10,12 @@ import DateFacet from './DateFacet'
 import Paper from '@material-ui/core/Paper'
 import FacetHeader from './FacetHeader'
 import FacetInfo from './FacetInfo'
-import ExpansionPanel from '@material-ui/core/ExpansionPanel'
-import ExpansionPanelSummary from '@material-ui/core/ExpansionPanelSummary'
-import ExpansionPanelDetails from '@material-ui/core/ExpansionPanelDetails'
+import DatasetSelector from './DatasetSelector'
+import SearchField from './SearchField'
+import LeafletMapDialog from './LeafletMapDialog'
+import Accordion from '@material-ui/core/Accordion'
+import AccordionSummary from '@material-ui/core/AccordionSummary'
+import AccordionDetails from '@material-ui/core/AccordionDetails'
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore'
 import clsx from 'clsx'
 
@@ -26,14 +29,14 @@ const styles = theme => ({
     borderBottomLeftRadius: 0,
     borderBottomRightRadius: 0
   },
-  expansionPanelSummaryRoot: {
+  accordionSummaryRoot: {
     paddingLeft: theme.spacing(1),
     cursor: 'default !important'
   },
-  expansionPanelSummaryContent: {
+  accordionSummaryContent: {
     margin: 0
   },
-  expansionPanelDetails: {
+  accordionDetails: {
     paddingTop: 0,
     paddingLeft: theme.spacing(1),
     flexDirection: 'column'
@@ -58,6 +61,9 @@ const styles = theme => ({
   }
 })
 
+/**
+ * A component for rendering a preconfigured set of facets and related information.
+ */
 class FacetBar extends React.Component {
   constructor (props) {
     super(props)
@@ -82,11 +88,20 @@ class FacetBar extends React.Component {
     const label = intl.get(`perspectives.${facetClass}.properties.${facetID}.label`)
     const description = intl.get(`perspectives.${facetClass}.properties.${facetID}.description`)
     const facet = facets[facetID]
-    const facetConstrainSelf = this.props.facetDataConstrainSelf !== null
-      ? this.props.facetDataConstrainSelf.facets[facetID]
-      : null
+    const facetConstrainSelf = this.props.facetDataConstrainSelf == null
+      ? null
+      : this.props.facetDataConstrainSelf.facets[facetID]
     let facetComponent = null
     const isActive = this.state.activeFacets.has(facetID)
+    if (this.props.facetedSearchMode === 'clientFS' && facetID !== 'datasetSelector') {
+      if (this.props.facetData.results == null) {
+        // do not render facets when there are no results
+        return null
+      } else {
+        // integrate the facet values which have been calculated with a Redux selector
+        facet.values = this.props.clientFSFacetValues[facetID]
+      }
+    }
     switch (facet.filterType) {
       case 'uriFilter':
       case 'spatialFilter':
@@ -102,6 +117,21 @@ class FacetBar extends React.Component {
             fetchFacet={this.props.fetchFacet}
             someFacetIsFetching={someFacetIsFetching}
             updateFacetOption={this.props.updateFacetOption}
+          />
+        )
+        break
+      case 'clientFSLiteral':
+        // console.log(someFacetIsFetching)
+        facetComponent = (
+          <HierarchicalFacet
+            facetID={facetID}
+            facet={facet}
+            facetClass={this.props.facetClass}
+            resultClass={this.props.resultClass}
+            facetUpdateID={facetUpdateID}
+            clientFSUpdateFacet={this.props.clientFSUpdateFacet}
+            someFacetIsFetching={someFacetIsFetching}
+            facetedSearchMode='clientFS'
           />
         )
         break
@@ -178,6 +208,15 @@ class FacetBar extends React.Component {
           />
         )
         break
+      case 'datasetSelector':
+        facetComponent = (
+          <DatasetSelector
+            datasets={this.props.facetData.datasets}
+            clientFSToggleDataset={this.props.clientFSToggleDataset}
+            perspectiveID={this.props.facetClass}
+          />
+        )
+        break
       default:
         facetComponent = (
           <HierarchicalFacet
@@ -194,16 +233,15 @@ class FacetBar extends React.Component {
         )
         break
     }
-
     return (
-      <ExpansionPanel
+      <Accordion
         key={facetID}
         expanded={isActive}
       >
-        <ExpansionPanelSummary
+        <AccordionSummary
           classes={{
-            root: classes.expansionPanelSummaryRoot,
-            content: classes.expansionPanelSummaryContent
+            root: classes.accordionSummaryRoot,
+            content: classes.accordionSummaryContent
           }}
           expandIcon={<ExpandMoreIcon />}
           IconButtonProps={{ onClick: this.handleExpandButtonOnClick(facetID) }}
@@ -215,51 +253,86 @@ class FacetBar extends React.Component {
             facetLabel={label}
             facet={facet}
             facetConstrainSelf={facetConstrainSelf}
+            facetConstrainSelfUpdateID={this.props.facetDataConstrainSelf
+              ? this.props.facetDataConstrainSelf.facetUpdateID : null}
             isActive={isActive}
             facetClass={this.props.facetClass}
             resultClass={this.props.resultClass}
             fetchFacet={this.props.fetchFacet}
             fetchFacetConstrainSelf={this.props.fetchFacetConstrainSelf}
+            fetchResults={this.props.fetchResults}
+            facetResults={this.props.facetResults}
+            clearFacet={this.props.clearFacet}
             updateFacetOption={this.props.updateFacetOption}
             facetDescription={description}
+            rootUrl={this.props.rootUrl}
           />
-        </ExpansionPanelSummary>
-        <ExpansionPanelDetails
-          className={clsx(classes[facet.containerClass], classes.expansionPanelDetails)}
+        </AccordionSummary>
+        <AccordionDetails
+          className={clsx(classes[facet.containerClass], classes.accordionDetails)}
         >
           {isActive && facetComponent}
-        </ExpansionPanelDetails>
-      </ExpansionPanel>
+        </AccordionDetails>
+      </Accordion>
     )
   }
 
   render () {
-    const { classes, facetClass, resultClass, resultCount } = this.props
-    const { facets } = this.props.facetData
+    const { classes, facetClass, resultClass, resultCount, facetData, facetedSearchMode } = this.props
+    const { facets } = facetData
     let someFacetIsFetching = false
-    Object.values(facets).forEach(facet => {
-      if (facet.isFetching) {
-        someFacetIsFetching = true
-      }
-    })
+    if (facetedSearchMode === 'serverFS') {
+      Object.values(facets).forEach(facet => {
+        if (facet.isFetching) {
+          someFacetIsFetching = true
+        }
+      })
+    }
 
     return (
       <div className={classes.root}>
-        <Paper className={classes.facetInfoContainer}>
-          <FacetInfo
-            facetUpdateID={this.props.facetData.facetUpdateID}
-            facetData={this.props.facetData}
-            facetClass={facetClass}
-            resultClass={resultClass}
-            resultCount={resultCount}
-            fetchingResultCount={this.props.fetchingResultCount}
-            updateFacetOption={this.props.updateFacetOption}
-            fetchResultCount={this.props.fetchResultCount}
-            someFacetIsFetching={someFacetIsFetching}
-            fetchFacet={this.props.fetchFacet}
-          />
-        </Paper>
-        {Object.keys(facets).map(facetID => this.renderFacet(facetID, someFacetIsFetching))}
+        {facetedSearchMode === 'clientFS' && this.renderFacet('datasetSelector', false)}
+        {facetedSearchMode === 'clientFS' &&
+          <SearchField
+            search={this.props.facetData}
+            fetchResults={this.props.clientFSFetchResults}
+            clearResults={this.props.clientFSClearResults}
+            updateQuery={this.props.clientFSUpdateQuery}
+            datasets={this.props.facetData.datasets}
+            perspectiveID={facetClass}
+          />}
+        {facetedSearchMode === 'clientFS' &&
+          <LeafletMapDialog
+            map={this.props.leafletMap}
+            clientFSFetchResults={this.props.clientFSFetchResults}
+            clientFSClearResults={this.props.clientFSClearResults}
+            updateMapBounds={this.props.updateMapBounds}
+            fetching={this.props.clientFS.spatialResultsFetching}
+            showError={this.props.showError}
+            perspectiveID={facetClass}
+          />}
+        {(facetedSearchMode === 'serverFS' || facetData.results !== null) &&
+          <Paper className={classes.facetInfoContainer}>
+            <FacetInfo
+              facetedSearchMode={facetedSearchMode}
+              facetUpdateID={facetData.facetUpdateID}
+              facetData={facetData}
+              facetClass={facetClass}
+              resultClass={resultClass}
+              resultCount={resultCount}
+              fetchingResultCount={this.props.fetchingResultCount}
+              updateFacetOption={this.props.updateFacetOption}
+              fetchResultCount={this.props.fetchResultCount}
+              someFacetIsFetching={someFacetIsFetching}
+              fetchFacet={this.props.fetchFacet}
+              perspectiveID={facetClass}
+            />
+          </Paper>}
+        {facets && Object.keys(facets).map(facetID => {
+          if (facetID !== 'datasetSelector') {
+            return this.renderFacet(facetID, someFacetIsFetching)
+          }
+        })}
       </div>
     )
   }
@@ -267,17 +340,34 @@ class FacetBar extends React.Component {
 
 FacetBar.propTypes = {
   classes: PropTypes.object.isRequired,
+  facetedSearchMode: PropTypes.string.isRequired,
   facetData: PropTypes.object.isRequired,
   facetDataConstrainSelf: PropTypes.object,
+  facetResults: PropTypes.object,
   facetClass: PropTypes.string.isRequired,
   resultClass: PropTypes.string.isRequired,
   resultCount: PropTypes.number.isRequired,
   fetchingResultCount: PropTypes.bool.isRequired,
-  fetchFacet: PropTypes.func.isRequired,
-  fetchFacetConstrainSelf: PropTypes.func.isRequired,
-  fetchResultCount: PropTypes.func.isRequired,
-  updateFacetOption: PropTypes.func.isRequired,
-  defaultActiveFacets: PropTypes.instanceOf(Set).isRequired
+  fetchFacet: PropTypes.func,
+  fetchFacetConstrainSelf: PropTypes.func,
+  fetchResults: PropTypes.func,
+  clearFacet: PropTypes.func,
+  fetchResultCount: PropTypes.func,
+  updateFacetOption: PropTypes.func,
+  updateMapBounds: PropTypes.func,
+  clientFS: PropTypes.object,
+  clientFSFacetValues: PropTypes.object,
+  clientFSToggleDataset: PropTypes.func,
+  clientFSFetchResults: PropTypes.func,
+  clientFSClearResults: PropTypes.func,
+  clientFSUpdateQuery: PropTypes.func,
+  clientFSUpdateFacet: PropTypes.func,
+  defaultActiveFacets: PropTypes.instanceOf(Set).isRequired,
+  leafletMap: PropTypes.object,
+  showError: PropTypes.func,
+  rootUrl: PropTypes.string.isRequired
 }
+
+export const FacetBarComponent = FacetBar
 
 export default withStyles(styles)(FacetBar)
