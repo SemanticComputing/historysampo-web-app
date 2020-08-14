@@ -8,12 +8,16 @@ import leafletMap from './leafletMap'
 // portal spefic reducers:
 import fullTextSearch from './sampo/fullTextSearch'
 import clientSideFacetedSearch from './sampo/clientSideFacetedSearch'
+import places from './history/places'
 import events from './history/events'
 import eventsFacets from './history/eventsFacets'
+import eventsFacetsConstrainSelf from './history/eventsFacetsConstrainSelf'
 
 const reducer = combineReducers({
+  places,
   events,
   eventsFacets,
+  eventsFacetsConstrainSelf,
   leafletMap,
   animation,
   options,

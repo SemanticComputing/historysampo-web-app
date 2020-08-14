@@ -3,10 +3,16 @@ import PropTypes from 'prop-types'
 import { Route, Redirect } from 'react-router-dom'
 import PerspectiveTabs from '../../main_layout/PerspectiveTabs'
 import ResultTable from '../../facet_results/ResultTable'
-import LeafletMap from '../../facet_results/LeafletMap'
-import Deck from '../../facet_results/Deck'
-import Network from '../../facet_results/Network'
+// import LeafletMap from '../../facet_results/LeafletMap'
+// import Deck from '../../facet_results/Deck'
 import Export from '../../facet_results/Export'
+// import MigrationsMapLegend from './MigrationsMapLegend'
+// import { MAPBOX_ACCESS_TOKEN, MAPBOX_STYLE } from '../../../configs/sampo/GeneralConfig'
+// import ApexChart from '../../facet_results/ApexChart'
+// import {
+//   createSingleLineChartData,
+//   createMultipleLineChartData
+// } from '../../../configs/sampo/ApexCharts/LineChartConfig'
 
 const Events = props => {
   const { rootUrl, perspective } = props
@@ -25,7 +31,7 @@ const Events = props => {
         path={`${props.rootUrl}/${perspective.id}/faceted-search/table`}
         render={routeProps =>
           <ResultTable
-            data={props.events}
+            data={props.facetResults}
             facetUpdateID={props.facetData.facetUpdateID}
             resultClass='events'
             facetClass='events'
@@ -34,14 +40,19 @@ const Events = props => {
             updateRowsPerPage={props.updateRowsPerPage}
             sortResults={props.sortResults}
             routeProps={routeProps}
+            rootUrl={rootUrl}
           />}
       />
       <Route
         path={`${rootUrl}/${perspective.id}/faceted-search/export`}
         render={() =>
           <Export
-            sparqlQuery={props.perspective1.paginatedResultsSparqlQuery}
+            data={props.facetResults}
+            resultClass='events'
+            facetClass='events'
             pageType='facetResults'
+            fetchPaginatedResults={props.fetchPaginatedResults}
+            updatePage={props.updatePage}
           />}
       />
     </>
@@ -49,12 +60,15 @@ const Events = props => {
 }
 
 Events.propTypes = {
-  events: PropTypes.object.isRequired,
-  places: PropTypes.object.isRequired,
+  facetResults: PropTypes.object.isRequired,
+  placesResults: PropTypes.object.isRequired,
   leafletMapLayers: PropTypes.object.isRequired,
   facetData: PropTypes.object.isRequired,
+  facetDataConstrainSelf: PropTypes.object,
   fetchResults: PropTypes.func.isRequired,
+  clearGeoJSONLayers: PropTypes.func.isRequired,
   fetchGeoJSONLayers: PropTypes.func.isRequired,
+  fetchGeoJSONLayersBackend: PropTypes.func.isRequired,
   fetchPaginatedResults: PropTypes.func.isRequired,
   fetchByURI: PropTypes.func.isRequired,
   updatePage: PropTypes.func.isRequired,
@@ -66,7 +80,8 @@ Events.propTypes = {
   animationValue: PropTypes.array.isRequired,
   animateMap: PropTypes.func.isRequired,
   screenSize: PropTypes.string.isRequired,
-  rootUrl: PropTypes.string.isRequired
+  rootUrl: PropTypes.string.isRequired,
+  showError: PropTypes.func.isRequired
 }
 
 export default Events

@@ -1,6 +1,6 @@
 const perspectiveID = 'events'
 
-export const eventsPropertiesFacetResults =
+export const eventPropertiesFacetResults =
   ` 
       {
         ?id sf:preferredLanguageLiteral (rdfs:label 'fi' '' ?prefLabel__id ) .
@@ -8,6 +8,9 @@ export const eventsPropertiesFacetResults =
         #FILTER (LANG(?prefLabel__id = 'fi'))
         BIND (?prefLabel__id as ?prefLabel__prefLabel)
         BIND(CONCAT("/${perspectiveID}/page/", REPLACE(STR(?id), "^.*\\\\/(.+)", "$1")) AS ?prefLabel__dataProviderUrl)
+        BIND(?id as ?uri__id)
+        BIND(?id as ?uri__dataProviderUrl)
+        BIND(?id as ?uri__prefLabel)
       }
       UNION
       {

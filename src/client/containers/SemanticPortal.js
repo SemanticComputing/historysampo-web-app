@@ -24,13 +24,12 @@ import FacetBar from '../components/facet_bar/FacetBar'
 // ** General components end **
 
 // ** Portal specific components and configs **
-import Events from '../components/perspectives/history/Events'
-import FacetedSearchPerspective from '../components/perspectives/sampo/FacetedSearchPerspective'
+import FacetedSearchPerspective from '../components/perspectives/history/FacetedSearchPerspective'
 import FullTextSearch from '../components/perspectives/sampo/FullTextSearch'
 import ClientFSPerspective from '../components/perspectives/sampo/client_fs/ClientFSPerspective'
 import ClientFSMain from '../components/perspectives/sampo/client_fs/ClientFSMain'
-import InstanceHomePage from '../components/perspectives/sampo/InstanceHomePage'
-import Footer from '../components/perspectives/sampo/Footer'
+import InstanceHomePage from '../components/perspectives/history/InstanceHomePage'
+import Footer from '../components/perspectives/history/Footer'
 import { perspectiveConfig } from '../configs/history/PerspectiveConfig'
 import { perspectiveConfigOnlyInfoPages } from '../configs/history/PerspectiveConfigOnlyInfoPages'
 import { rootUrl } from '../configs/history/GeneralConfig'
@@ -578,6 +577,7 @@ const mapStateToProps = state => {
   return {
     events: state.events,
     eventsFacets: state.eventsFacets,
+    eventsFacetsConstrainSelf: state.eventsFacetsConstrainSelf,
     places: state.places,
     leafletMap: state.leafletMap,
     fullTextSearch: state.fullTextSearch,
@@ -632,7 +632,6 @@ SemanticPortal.propTypes = {
   error: PropTypes.object.isRequired,
   events: PropTypes.object.isRequired,
   eventsFacets: PropTypes.object.isRequired,
-  places: PropTypes.object.isRequired,
   /**
    * Leaflet map config and external layers.
    */
