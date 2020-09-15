@@ -7,10 +7,10 @@ import CircularProgress from '@material-ui/core/CircularProgress'
 import purple from '@material-ui/core/colors/purple'
 import PerspectiveTabs from '../../main_layout/PerspectiveTabs'
 import InstanceHomePageTable from '../../main_layout/InstanceHomePageTable'
-import Network from '../../facet_results/Network'
-import LeafletMap from '../../facet_results/LeafletMap'
+// import Network from '../../facet_results/Network'
+// import LeafletMap from '../../facet_results/LeafletMap'
 import Export from '../../facet_results/Export'
-import { coseLayout, cytoscapeStyle } from '../../../configs/sampo/Cytoscape.js/NetworkConfig'
+// import { coseLayout, cytoscapeStyle } from '../../../configs/sampo/Cytoscape.js/NetworkConfig'
 import { Route, Redirect } from 'react-router-dom'
 import { has } from 'lodash'
 
@@ -77,37 +77,9 @@ class InstanceHomePage extends React.Component {
     })
   }
 
-  createPlaceArray = events => {
-    let places = {}
-    events = Array.isArray(events) ? events : [events]
-    events.map(event => {
-      if (has(event, 'place')) {
-        const eventPlaces = Array.isArray(event.place) ? event.place : [event.place]
-        eventPlaces.map(place => {
-          if (!has(places, place.id)) {
-            places[place.id] = {
-              id: place.id,
-              prefLabel: place.prefLabel,
-              lat: place.lat,
-              long: place.long,
-              events: [event] // gather events here
-            }
-          } else {
-            places[place.id].events.push(event)
-          }
-        })
-      }
-    })
-    places = Object.values(places)
-    places.forEach(place => {
-      place.instanceCount = place.events.length
-    })
-    return places
-  }
-
   getVisibleRows = rows => {
     const visibleRows = []
-    const instanceClass = this.props.data.type ? this.props.data.type.id : ''
+    const instanceClass = this.props.tableData.type ? this.props.tableData.type.id : ''
     rows.map(row => {
       if ((has(row, 'onlyForClass') && row.onlyForClass === instanceClass) ||
        !has(row, 'onlyForClass')) {
@@ -118,8 +90,8 @@ class InstanceHomePage extends React.Component {
   }
 
   render = () => {
-    const { classes, data, isLoading, resultClass, rootUrl } = this.props
-    const hasData = data !== null && Object.values(data).length >= 1
+    const { classes, tableData, isLoading, resultClass, rootUrl } = this.props
+    const hasData = tableData !== null && Object.values(tableData).length >= 1
     return (
       <div className={classes.root}>
         <PerspectiveTabs
@@ -149,38 +121,8 @@ class InstanceHomePage extends React.Component {
                 render={() =>
                   <InstanceHomePageTable
                     resultClass={resultClass}
-                    data={data}
+                    data={tableData}
                     properties={this.getVisibleRows(this.props.properties)}
-                  />}
-              />
-              <Route
-                path={`${rootUrl}/${resultClass}/page/${this.state.localID}/network`}
-                render={() =>
-                  <Network
-                    pageType='instancePage'
-                    results={this.props.networkData}
-                    resultUpdateID={this.props.resultUpdateID}
-                    fetchNetworkById={this.props.fetchNetworkById}
-                    resultClass='manuscriptInstancePageNetwork'
-                    id={data.id}
-                    limit={200}
-                    optimize={1.2}
-                    style={cytoscapeStyle}
-                    layout={coseLayout}
-                  />}
-              />
-              <Route
-                path={`${rootUrl}/${resultClass}/page/${this.state.localID}/map`}
-                render={() =>
-                  <LeafletMap
-                    results={this.createPlaceArray(data.event)}
-                    resultClass='instanceEvents'
-                    pageType='instancePage'
-                    mapMode='cluster'
-                    instance={null}
-                    fetchByURI={this.props.fetchByURI}
-                    fetching={this.props.isLoading}
-                    showInstanceCountInClusters
                   />}
               />
               <Route
@@ -189,7 +131,7 @@ class InstanceHomePage extends React.Component {
                   <Export
                     sparqlQuery={this.props.sparqlQuery}
                     pageType='instancePage'
-                    id={data.id}
+                    id={tableData.id}
                   />}
               />
             </>}
