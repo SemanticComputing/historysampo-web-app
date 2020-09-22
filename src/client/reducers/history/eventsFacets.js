@@ -39,6 +39,24 @@ export const INITIAL_STATE = {
       filterType: 'uriFilter',
       uriFilter: null,
       priority: 4
+    },
+    keyword: {
+      id: 'field',
+      // predicate: defined in backend
+      distinctValueCount: 0,
+      values: [],
+      flatValues: [],
+      sortBy: 'instanceCount',
+      sortDirection: 'desc',
+      sortButton: true,
+      spatialFilterButton: false,
+      chartButton: false,
+      isFetching: false,
+      searchField: true,
+      containerClass: 'ten',
+      filterType: 'uriFilter',
+      uriFilter: null,
+      priority: 4
     }
   }
 }

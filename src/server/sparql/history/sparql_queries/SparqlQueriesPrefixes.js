@@ -17,4 +17,5 @@ export const prefixes = `
   PREFIX spatial: <http://jena.apache.org/spatial#>
   PREFIX text: <http://jena.apache.org/text#>
   PREFIX sf: <http://ldf.fi/functions#>
+  PREFIX dc: <http://purl.org/dc/elements/1.1/>
 `

@@ -33,6 +33,15 @@ export const eventsPerspectiveConfig = {
       labelPath: 'crm:P130_shows_features_of/rdfs:label',
       predicate: 'crm:P130_shows_features_of',
       type: 'list'
+    },
+    keyword: {
+      id: 'keyword',
+      facetValueFilter: `
+      `,
+      labelPath: 'dc:subject/rdfs:label',
+      predicate: 'dc:subject',
+      facetLabelFilter: 'FILTER(LANG(?prefLabel_) = \'fi\')',
+      type: 'list'
     }
   }
 }
