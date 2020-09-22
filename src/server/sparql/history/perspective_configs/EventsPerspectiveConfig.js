@@ -42,6 +42,7 @@ export const eventsPerspectiveConfig = {
       predicate: 'dc:subject',
       facetLabelFilter: 'FILTER(LANG(?prefLabel_) = \'fi\')',
       type: 'list'
-    }
+    },
+
   }
 }

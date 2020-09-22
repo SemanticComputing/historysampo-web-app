@@ -19,8 +19,13 @@ export const eventPropertiesFacetResults =
       }
       UNION
       {
-        ?id dc:Subject ?keyword__id .
+        ?id dc:subject ?keyword__id .
         ?keyword__id rdfs:label ?keyword__prefLabel .
+      }
+      UNION
+      {
+        ?id dc:description ?description__id .
+        BIND(?description__id AS ?description__prefLabel) .
       }
 
 `

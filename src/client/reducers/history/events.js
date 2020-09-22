@@ -45,7 +45,26 @@ export const INITIAL_STATE = {
       sortValues: true,
       numberedList: false,
       minWidth: 200
-    }
+    },
+    {
+      id: 'keyword',
+      valueType: 'object',
+      makeLink: true,
+      externalLink: false,
+      sortValues: true,
+      numberedList: false,
+      minWidth: 200
+    },
+    {
+      id: 'description',
+      valueType: 'object',
+      makeLink: true,
+      externalLink: false,
+      sortValues: true,
+      numberedList: false,
+      minWidth: 200,
+      onlyOnInstancePage: true
+    },
   ]
 }
 
