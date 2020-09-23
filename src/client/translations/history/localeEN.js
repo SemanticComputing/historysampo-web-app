@@ -147,6 +147,21 @@ export default {
     `
   },
   perspectives: {
+    places: {
+      label: 'Places',
+      facetResultsType: 'places',
+      shortDescription: 'Historical places',
+    },
+    people: {
+      label: 'People',
+      facetResultsType: 'people',
+      shortDescription: 'Historical people',
+    },
+    periods: {
+      label: 'Periods',
+      facetResultsType: 'periods',
+      shortDescription: 'Historical periods',
+    },
     events: {
       label: 'Events',
       facetResultsType: 'events',
