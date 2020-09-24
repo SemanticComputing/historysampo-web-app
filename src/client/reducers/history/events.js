@@ -38,6 +38,15 @@ export const INITIAL_STATE = {
       minWidth: 250
     },
     {
+      id: 'timespan',
+      valueType: 'object',
+      makeLink: true,
+      externalLink: false,
+      sortValues: true,
+      numberedList: false,
+      minWidth: 200
+    },
+    {
       id: 'field',
       valueType: 'object',
       makeLink: true,

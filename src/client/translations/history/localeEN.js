@@ -215,6 +215,10 @@ export default {
           label: 'Subject',
           description: 'Subjectmatter keyword'
         },
+        timespan: {
+          label: 'Time',
+          description: 'Time of the event'
+        },
         description: {
           label: 'Kuvaus',
           description: 'Tapahtuman kuvaus'

@@ -21,11 +21,17 @@ export const eventPropertiesFacetResults =
       {
         ?id dc:subject ?keyword__id .
         ?keyword__id rdfs:label ?keyword__prefLabel .
+        FILTER (LANG(?keyword__prefLabel) = 'fi')
       }
       UNION
       {
         ?id dc:description ?description__id .
         BIND(?description__id AS ?description__prefLabel) .
+      }
+      UNION
+      {
+        ?id crm:P4_has_time-span ?timespan__id .
+        ?timespan__id rdfs:label ?timespan__prefLabel .
       }
 
 `
