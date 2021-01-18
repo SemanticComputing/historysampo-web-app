@@ -1,10 +1,10 @@
 export default {
   languageLabel: 'English',
   appTitle: {
-    short: 'historysampo',
+    short: 'HistorySampo',
     long: 'HistorySampo',
     subheading: `
-      "Here to forge for us the Sampo, Hammer us the lid in colors"
+      Finnish History on the Semantic Web
     `
   },
   appDescription: `
@@ -13,7 +13,7 @@ export default {
   appDescription1: `
     Sampo is a web service for searching and studying place names. The search results
     can be viewed as a table, on maps, and as statistical distributions.
-    Historical and current background maps are provided.
+    Historical and current background maps are providedf.
   `,
   appDescription2: `
     Start by choosing source dataset(s) and input a place name on the search field.
@@ -41,6 +41,8 @@ export default {
   },
   facetBar: {
     results: 'Results',
+    activeFilters: 'Active filters:',
+    removeAllFilters: 'Remove all',
     narrowDownBy: 'Narrow down by',
     filterOptions: 'Filter options',
     filterByName: 'Filter by name',
@@ -50,7 +52,15 @@ export default {
     doNotSelectSubconcepts: 'Do not select subconcepts',
     sortingOptions: 'Sorting options',
     sortAlphabetically: 'Sort alphabetically',
-    sortByNumberOfSearchResults: 'Sort by number of search results'
+    sortByNumberOfSearchResults: 'Sort by number of search results',
+    useDisjunction: 'Use logical OR between selections',
+    useConjuction: 'Use logical AND between selections',
+    minYear: 'Min year',
+    maxYear: 'Max year',
+    min: 'Min',
+    max: 'Max',
+    facetSearchFieldPlaceholder: 'Search...',
+    applyFacetSelection: 'apply'
   },
   tabs: {
     table: 'table',
@@ -150,17 +160,17 @@ export default {
     places: {
       label: 'Places',
       facetResultsType: 'places',
-      shortDescription: 'Historical places',
+      shortDescription: 'Historical places'
     },
     people: {
       label: 'People',
       facetResultsType: 'people',
-      shortDescription: 'Historical people',
+      shortDescription: 'Historical people'
     },
     periods: {
       label: 'Periods',
       facetResultsType: 'periods',
-      shortDescription: 'Historical periods',
+      shortDescription: 'Historical periods'
     },
     events: {
       label: 'Events',

@@ -73,7 +73,7 @@ export const INITIAL_STATE = {
       numberedList: false,
       minWidth: 200,
       onlyOnInstancePage: true
-    },
+    }
   ]
 }
 

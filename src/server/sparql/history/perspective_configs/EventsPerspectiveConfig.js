@@ -11,6 +11,8 @@ export const eventsPerspectiveConfig = {
     useAuth: false
   },
   facetClass: 'crm:E5_Event',
+  langTag: 'fi',
+  langTagSecondary: '',
   paginatedResults: {
     properties: eventPropertiesFacetResults
   },
@@ -32,6 +34,7 @@ export const eventsPerspectiveConfig = {
       `,
       labelPath: 'crm:P130_shows_features_of/rdfs:label',
       predicate: 'crm:P130_shows_features_of',
+      facetLabelPredicate: 'rdfs:label',
       type: 'list'
     },
     keyword: {
@@ -40,9 +43,11 @@ export const eventsPerspectiveConfig = {
       `,
       labelPath: 'dc:subject/rdfs:label',
       predicate: 'dc:subject',
-      facetLabelFilter: 'FILTER(LANG(?prefLabel_) = \'fi\')',
+      facetLabelPredicate: 'rdfs:label',
+      facetLabelFilter: `
+        FILTER(LANG(?prefLabel_) = '<LANG>')
+      `,
       type: 'list'
-    },
-
+    }
   }
 }
