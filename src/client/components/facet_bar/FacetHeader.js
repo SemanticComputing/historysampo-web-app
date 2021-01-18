@@ -13,9 +13,11 @@ import ListSubheader from '@material-ui/core/ListSubheader'
 import history from '../../History'
 import ChartDialog from './ChartDialog'
 import { createApexPieChartData } from '../../configs/sampo/ApexCharts/PieChartConfig'
+import { createApexBarChartData } from '../../configs/sampo/ApexCharts/BarChartConfig'
 import { createSingleLineChartData } from '../../configs/sampo/ApexCharts/LineChartConfig'
 import PieChartIcon from '@material-ui/icons/PieChart'
 import LineChartIcon from '@material-ui/icons/ShowChart'
+import BarChartIcon from '@material-ui/icons/BarChart'
 
 const styles = theme => ({
   root: {
@@ -45,9 +47,12 @@ const styles = theme => ({
  * A component for rendering a header and optional settings dropdown for a facet component.
  */
 class FacetHeader extends React.Component {
-  state = {
-    anchorEl: null
-  };
+  constructor (props) {
+    super(props)
+    this.state = {
+      anchorEl: null
+    }
+  }
 
   handleMenuButtonClick = event => {
     this.setState({ anchorEl: event.currentTarget })
@@ -167,10 +172,10 @@ class FacetHeader extends React.Component {
       sortBy,
       filterType,
       type,
+      barChartButton = false,
       pieChartButton = false,
       lineChartButton = false,
       selectAlsoSubconceptsButton = false,
-      intersectionBarChartButton = false,
       selectAlsoSubconcepts,
       useConjuctionButton = false,
       useConjuction
@@ -287,6 +292,24 @@ class FacetHeader extends React.Component {
             facetID={this.props.facetID}
             facetClass={this.props.facetClass}
             icon={<PieChartIcon />}
+            tooltip={intl.get('facetBar.pieChart.tooltip')}
+            dialogTitle={this.props.facetLabel}
+          />}
+        {barChartButton &&
+          <ChartDialog
+            rawData={this.props.facetConstrainSelf.values}
+            rawDataUpdateID={this.props.facetConstrainSelfUpdateID}
+            fetching={this.props.facetConstrainSelf.isFetching}
+            fetchData={this.props.fetchFacetConstrainSelf}
+            createChartData={createApexBarChartData}
+            facetID={this.props.facetID}
+            facetClass={this.props.facetClass}
+            icon={<BarChartIcon />}
+            tooltip={intl.get('facetBar.barChart.tooltip')}
+            title={intl.get(`facetBar.barChart.${this.props.facetID}.title`)}
+            xaxisTitle={intl.get(`facetBar.barChart.${this.props.facetID}.xaxisTitle`)}
+            yaxisTitle={intl.get(`facetBar.barChart.${this.props.facetID}.yaxisTitle`)}
+            seriesTitle={intl.get(`facetBar.barChart.${this.props.facetID}.seriesTitle`)}
           />}
         {lineChartButton &&
           <ChartDialog
@@ -298,23 +321,17 @@ class FacetHeader extends React.Component {
             resultClass={`${this.props.facetID}LineChart`}
             facetClass={this.props.facetClass}
             icon={<LineChartIcon />}
-          />}
-        {intersectionBarChartButton &&
-          <ChartDialog
-            rawData={this.props.facetResults.results}
-            rawDataUpdateID={this.props.facetResults.resultUpdateID}
-            fetching={this.props.facetResults.fetching}
-            fetchData={this.props.fetchResults}
-            createChartData={createSingleLineChartData}
-            resultClass={`${this.props.facetID}IntersectionBarChart`}
-            facetClass={this.props.facetClass}
-            icon={<LineChartIcon />}
+            tooltip={intl.get('facetBar.lineChart.tooltip')}
+            title={intl.get(`facetBar.lineChart.${this.props.facetID}.title`)}
+            xaxisTitle={intl.get(`facetBar.lineChart.${this.props.facetID}.xaxisTitle`)}
+            yaxisTitle={intl.get(`facetBar.lineChart.${this.props.facetID}.yaxisTitle`)}
+            seriesTitle={intl.get(`facetBar.lineChart.${this.props.facetID}.seriesTitle`)}
           />}
         {menuButtons.length > 0 &&
           <>
-            <Tooltip disableFocusListener title='Filter options'>
+            <Tooltip disableFocusListener title={intl.get('facetBar.filterOptions')}>
               <IconButton
-                aria-label='Filter options'
+                aria-label={intl.get('facetBar.filterOptions')}
                 aria-owns={open ? 'facet-option-menu' : undefined}
                 aria-haspopup='true'
                 onClick={this.handleMenuButtonClick}
