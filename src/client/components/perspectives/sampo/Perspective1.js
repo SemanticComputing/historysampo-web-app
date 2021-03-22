@@ -51,8 +51,9 @@ const Perspective1 = props => {
           <LeafletMap
             center={[22.43, 10.37]}
             zoom={2}
-            // center={[60.17, 24.81]}
-            // zoom={14}
+            // locateUser
+            // center={[60.187, 24.821]}
+            // zoom={15}
             results={props.placesResults.results}
             layers={props.leafletMapLayers}
             pageType='facetResults'
@@ -65,13 +66,18 @@ const Perspective1 = props => {
             showMapModeControl={false}
             instance={props.placesResults.instanceTableData}
             fetchResults={props.fetchResults}
-            fetchGeoJSONLayers={props.fetchGeoJSONLayersBackend}
+            fetchGeoJSONLayers={props.fetchGeoJSONLayers}
             clearGeoJSONLayers={props.clearGeoJSONLayers}
             fetchByURI={props.fetchByURI}
             fetching={props.placesResults.fetching}
             showInstanceCountInClusters
             updateFacetOption={props.updateFacetOption}
             showExternalLayers
+            // activeOverlays={[
+            //   'arkeologiset_kohteet_alue',
+            //   'arkeologiset_kohteet_piste'
+            // ]}
+            layerControlExpanded
             showError={props.showError}
           />}
       />
@@ -108,7 +114,7 @@ const Perspective1 = props => {
             showMapModeControl={false}
             instance={props.placesResults.instanceTableData}
             fetchResults={props.fetchResults}
-            fetchGeoJSONLayers={props.fetchGeoJSONLayersBackend}
+            fetchGeoJSONLayers={props.fetchGeoJSONLayers}
             clearGeoJSONLayers={props.clearGeoJSONLayers}
             fetchByURI={props.fetchByURI}
             fetching={props.placesResults.fetching}
@@ -124,19 +130,26 @@ const Perspective1 = props => {
           <Deck
             results={props.placesResults.results}
             facetUpdateID={props.facetData.facetUpdateID}
+            instanceAnalysisData={props.placesResults.instanceAnalysisData}
+            instanceAnalysisDataUpdateID={props.placesResults.instanceAnalysisDataUpdateID}
             resultClass='placesMsMigrations'
             facetClass='perspective1'
             fetchResults={props.fetchResults}
+            fetchInstanceAnalysis={props.fetchInstanceAnalysis}
             fetching={props.placesResults.fetching}
+            fetchingInstanceAnalysisData={props.placesResults.fetchingInstanceAnalysisData}
             layerType='arcLayer'
+            getArcWidth={d => d.instanceCountScaled}
             fromText={intl.get('deckGlMap.manuscriptMigrations.from')}
             toText={intl.get('deckGlMap.manuscriptMigrations.to')}
+            countText={intl.get('deckGlMap.manuscriptMigrations.count')}
             legendTitle={intl.get('deckGlMap.manuscriptMigrations.legendTitle')}
             legendFromText={intl.get('deckGlMap.manuscriptMigrations.legendFrom')}
             legendToText={intl.get('deckGlMap.manuscriptMigrations.legendTo')}
             showMoreText={intl.get('deckGlMap.showMoreInformation')}
             listHeadingSingleInstance={intl.get('deckGlMap.manuscriptMigrations.listHeadingSingleInstance')}
             listHeadingMultipleInstances={intl.get('deckGlMap.manuscriptMigrations.listHeadingMultipleInstances')}
+            instanceVariable='manuscript'
             showTooltips
             mapBoxAccessToken={MAPBOX_ACCESS_TOKEN}
             mapBoxStyle={MAPBOX_STYLE}
@@ -155,8 +168,11 @@ const Perspective1 = props => {
             createChartData={createSingleLineChartData}
             title='Manuscript production by decade'
             xaxisTitle='Decade'
+            xaxisType='category'
+            xaxisTickAmount={30}
             yaxisTitle='Manuscript count'
             seriesTitle='Manuscript count'
+            stroke={{ width: 2 }}
             resultClass='productionTimespanLineChart'
             facetClass='perspective1'
           />}
@@ -173,9 +189,15 @@ const Perspective1 = props => {
             fetchData={props.fetchResults}
             createChartData={createMultipleLineChartData}
             title='Manuscript events by decade'
-            xaxisTitle='Decade'
+            xaxisTitle='Year'
+            xaxisType='category'
+            xaxisTickAmount={30}
             yaxisTitle='Count'
             seriesTitle='Count'
+            stroke={{
+              curve: 'straight',
+              width: 2
+            }}
             resultClass='eventLineChart'
             facetClass='perspective1'
           />}

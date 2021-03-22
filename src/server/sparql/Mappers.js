@@ -81,20 +81,7 @@ export const mapNameSampoResults = sparqlBindings => {
   return results
 }
 
-export const mapLineChart = sparqlBindings => {
-  const seriesData = []
-  const categoriesData = []
-  sparqlBindings.map(b => {
-    seriesData.push(b.count.value)
-    categoriesData.push(b.category.value)
-  })
-  return {
-    seriesData,
-    categoriesData
-  }
-}
-
-export const mapLineChartFillEmptyValues = sparqlBindings => {
+export const mapLineChart = ({ sparqlBindings, config }) => {
   const seriesData = []
   const categoriesData = []
   const sparqlBindingsLength = sparqlBindings.length
@@ -102,15 +89,23 @@ export const mapLineChartFillEmptyValues = sparqlBindings => {
     const currentCategory = parseInt(b.category.value)
     const currentValue = parseInt(b.count.value)
     seriesData.push(currentValue)
-    categoriesData.push(currentCategory)
-    if (index + 1 < sparqlBindingsLength) {
+    categoriesData.push(
+      config && config.xAxisConverter
+        ? config.xAxisConverter(currentCategory)
+        : currentCategory
+    )
+    if (config && config.fillEmptyValues && index + 1 < sparqlBindingsLength) {
       let categoryIter = currentCategory
       const nextNonZeroCategory = parseInt(bindings[index + 1].category.value)
       // add zeros until we reach the next category with a non zero value
       while (categoryIter < nextNonZeroCategory - 1) {
         categoryIter += 1
         seriesData.push(0)
-        categoriesData.push(categoryIter)
+        categoriesData.push(
+          config && config.xAxisConverter
+            ? config.xAxisConverter(categoryIter)
+            : categoryIter
+        )
       }
     }
   })
@@ -152,6 +147,20 @@ export const mapMultipleLineChart = sparqlBindings => {
     res[p] = trimResult(res[p])
   }
   return res
+}
+
+export const linearScale = ({ data, config }) => {
+  const { variable, minAllowed, maxAllowed } = config
+  const length = data.length
+  const min = data[length - 1][variable]
+  const max = data[0].[variable]
+  data.forEach(item => {
+    if (item[variable]) {
+      const unscaledNum = item[variable]
+      // https://stackoverflow.com/a/31687097
+      item[`${variable}Scaled`] = (maxAllowed - minAllowed) * (unscaledNum - min) / (max - min) + minAllowed
+    }
+  })
 }
 
 /* Data processing as in:
