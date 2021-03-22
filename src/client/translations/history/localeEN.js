@@ -1,5 +1,9 @@
 export default {
   languageLabel: 'English',
+  html: {
+    title: 'HistorySampo –  Finnish History on the Semantic Web',
+    description: 'HistorySampo is a semantic portal for searching and browsing historical events based on times, places, types, themes and keywords.'
+  },
   appTitle: {
     short: 'HistorySampo',
     long: 'HistorySampo',
