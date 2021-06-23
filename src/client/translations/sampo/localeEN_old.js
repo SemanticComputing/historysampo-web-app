@@ -33,6 +33,7 @@ export default {
   `,
   selectPerspective: 'Select a perspective to search and browse the knowledge graph:',
   mainPageImageLicence: 'Images used under license from Shutterstock.com',
+  backendErrorText: 'One of the backend services is not available at the moment. Please try again later.',
   topBar: {
     feedback: 'feedback',
     info: {
@@ -138,7 +139,7 @@ export default {
       inputLabel: 'Etsi nimellä'
     },
     sliderFacet: {
-      invalidStartOrEnd: 'Min value must be smaller than max value. The smallest value can be {min} and the largest value can be {max}.'
+      invalidStartOrEnd: 'Only whole numbers are allowed. Min value must be smaller than max value. The smallest value can be {min} and the largest value can be {max}.'
     }
   },
   leafletMap: {
@@ -664,6 +665,26 @@ export default {
             the information about the event.
           `
         }
+      }
+    },
+    fullTextSearch: {
+      properties: {
+        prefLabel: {
+          label: 'Label',
+          description: ''
+        },
+        type: {
+          label: 'Type',
+          description: ''
+        },
+        note: {
+          label: 'Note',
+          description: ''
+        }
+        // source: {
+        //   label: 'Source',
+        //   description: ''
+        // }
       }
     },
     manuscripts: {

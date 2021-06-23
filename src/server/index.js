@@ -5,6 +5,7 @@ import path from 'path'
 import bodyParser from 'body-parser'
 import axios from 'axios'
 import { has, castArray } from 'lodash'
+import expressStaticGzip from 'express-static-gzip'
 import {
   getResultCount,
   getPaginatedResults,
@@ -18,6 +19,7 @@ import { fetchGeoJSONLayer } from './wfs/WFSApi'
 import swaggerUi from 'swagger-ui-express'
 import { OpenApiValidator } from 'express-openapi-validator'
 import yaml from 'js-yaml'
+import querystring from 'querystring'
 const DEFAULT_PORT = 3001
 const app = express()
 app.set('port', process.env.PORT || DEFAULT_PORT)
@@ -44,7 +46,8 @@ let publicPath = null
 if (!isDevelopment) {
   // The root directory from which to serve static assets
   publicPath = path.join(__dirname, './../public/')
-  app.use(express.static(publicPath))
+  // app.use(express.static(publicPath))
+  app.use('/', expressStaticGzip(publicPath))
 }
 
 // React app makes requests to these api urls
@@ -264,6 +267,39 @@ new OpenApiValidator({
         })
         res.end(response.data, 'base64')
       } catch (error) {
+        next(error)
+      }
+    })
+
+    app.get(`${apiPath}/fha-wms`, async (req, res, next) => {
+      const headers = {
+        Authorization: `Basic ${process.env.FHA_WMS_BASIC_AUTH}`
+      }
+      const { service, request, layers, styles, format, transparent, version, width, height, crs, bbox } = req.query
+      const mapServerParams = {
+        service,
+        request,
+        layers,
+        styles,
+        format,
+        transparent,
+        version,
+        width,
+        height,
+        crs,
+        bbox
+      }
+      const url = `http://137.116.207.73/geoserver/ows?${querystring.stringify(mapServerParams)}`
+      try {
+        const response = await axios({
+          method: 'get',
+          url,
+          responseType: 'arraybuffer',
+          headers
+        })
+        res.end(response.data, 'base64')
+      } catch (error) {
+        console.log(error)
         next(error)
       }
     })

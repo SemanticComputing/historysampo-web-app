@@ -11,10 +11,9 @@ import {
 } from 'rxjs/operators'
 import { combineEpics, ofType } from 'redux-observable'
 import intl from 'react-intl-universal'
-import localeEN from '../translations/history/localeEN'
-import localeFI from '../translations/history/localeFI'
-import localeSV from '../translations/history/localeSV'
-import { stateToUrl, handleAxiosError, pickSelectedDatasets /* boundsToValues */ } from '../helpers/helpers'
+import localeEN from '../translations/history/localeEN.js'
+import localeFI from '../translations/history/localeFI.js'
+import { stateToUrl, pickSelectedDatasets } from '../helpers/helpers'
 import querystring from 'querystring'
 import {
   FETCH_RESULT_COUNT,
@@ -39,6 +38,7 @@ import {
   CLIENT_FS_FETCH_RESULTS,
   CLIENT_FS_FETCH_RESULTS_FAILED,
   LOAD_LOCALES,
+  SHOW_ERROR,
   updateResultCount,
   updatePaginatedResults,
   updateResults,
@@ -51,12 +51,9 @@ import {
   updateLocale,
   updateGeoJSONLayers,
   updateKnowledgeGraphMetadata,
-  SHOW_ERROR
+  fetchGeoJSONLayersFailed
 } from '../actions'
-import {
-  documentFinderAPIUrl,
-  backendErrorText
-} from '../configs/sampo/GeneralConfig'
+import { documentFinderAPIUrl } from '../configs/sampo/GeneralConfig'
 
 /*
 * Note that all code inside the 'client' folder runs on the browser, so there is no 'process' object as in Node.js.
@@ -66,9 +63,10 @@ const apiUrl = process.env.API_URL
 
 export const availableLocales = {
   en: localeEN,
-  fi: localeFI,
-  sv: localeSV
+  fi: localeFI
 }
+
+let backendErrorText = null
 
 const fetchPaginatedResultsEpic = (action$, state$) => action$.pipe(
   ofType(FETCH_PAGINATED_RESULTS),
@@ -158,13 +156,15 @@ const fetchInstanceAnalysisEpic = (action$, state$) => action$.pipe(
   ofType(FETCH_INSTANCE_ANALYSIS),
   withLatestFrom(state$),
   mergeMap(([action, state]) => {
-    const { resultClass, facetClass, fromID, toID } = action
+    const { resultClass, facetClass, fromID, toID, period, province } = action
     const params = stateToUrl({
       facets: facetClass ? state[`${facetClass}Facets`].facets : null,
       facetClass,
       uri: action.uri ? action.uri : null,
       fromID,
-      toID
+      toID,
+      period,
+      province
     })
     const requestUrl = `${apiUrl}/faceted-search/${resultClass}/all`
     // https://rxjs-dev.firebaseapp.com/api/ajax/ajax
@@ -386,13 +386,14 @@ const clientFSFetchResultsEpic = (action$, state$) => action$.pipe(
   debounceTime(500),
   switchMap(([action, state]) => {
     const { jenaIndex } = action
-    const selectedDatasets = pickSelectedDatasets(state.clientSideFacetedSearch.datasets)
+    const { clientSideFacetedSearch } = state
+    const selectedDatasets = pickSelectedDatasets(clientSideFacetedSearch.datasets)
     const dsParams = selectedDatasets.map(ds => `dataset=${ds}`).join('&')
     let requestUrl
     if (action.jenaIndex === 'text') {
       requestUrl = `${apiUrl}/federated-search?q=${action.query}&${dsParams}`
     } else if (action.jenaIndex === 'spatial') {
-      const { latMin, longMin, latMax, longMax } = state.leafletMap
+      const { latMin, longMin, latMax, longMax } = clientSideFacetedSearch.maps.clientFSBboxSearch
       requestUrl = `${apiUrl}/federated-search?latMin=${latMin}&longMin=${longMin}&latMax=${latMax}&longMax=${longMax}&${dsParams}`
     }
     return ajax.getJSON(requestUrl).pipe(
@@ -421,6 +422,7 @@ const loadLocalesEpic = action$ => action$.pipe(
       locales: availableLocales,
       warningHandler: () => null
     })
+    backendErrorText = intl.get('backendErrorText')
     return updateLocale({ language: action.currentLanguage })
   })
 )
@@ -484,13 +486,24 @@ const fetchGeoJSONLayersEpic = action$ => action$.pipe(
   ofType(FETCH_GEOJSON_LAYERS),
   mergeMap(async action => {
     const { layerIDs, bounds } = action
-    const data = await Promise.all(layerIDs.map(layerID => fetchGeoJSONLayer(layerID, bounds)))
-    return updateGeoJSONLayers({ payload: data })
+    try {
+      const data = await Promise.all(layerIDs.map(layerID => fetchGeoJSONLayer(layerID, bounds)))
+      return updateGeoJSONLayers({ payload: data })
+    } catch (error) {
+      return fetchGeoJSONLayersFailed({
+        error,
+        message: {
+          text: backendErrorText,
+          title: 'Error'
+        }
+      })
+    }
   })
 )
 
 const fetchGeoJSONLayer = async (layerID, bounds) => {
   const baseUrl = 'https://kartta.nba.fi/arcgis/services/WFS/MV_Kulttuuriymparisto/MapServer/WFSServer'
+  // const baseUrl = 'https://kartta.nba.fi/arcgis/services/WFS/MV_KulttuuriymparistoSuojellut/MapServer/WFSServer'
   // const baseUrl = 'http://avaa.tdata.fi/geoserver/kotus/ows'
   // const baseUrl = 'http://avaa.tdata.fi/geoserver/paituli/wfs'
   const boundsStr =
@@ -506,14 +519,10 @@ const fetchGeoJSONLayer = async (layerID, bounds) => {
     // outputFormat: 'application/json' for kotus layers
   }
   const url = `${baseUrl}?${querystring.stringify(mapServerParams)}`
-  try {
-    const response = await axios.get(url)
-    return {
-      layerID: layerID,
-      geoJSON: response.data
-    }
-  } catch (error) {
-    handleAxiosError(error)
+  const response = await axios.get(url)
+  return {
+    layerID: layerID,
+    geoJSON: response.data
   }
 }
 
