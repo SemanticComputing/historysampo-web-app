@@ -12,8 +12,9 @@ export const perspectiveConfig = [
   {
     id: 'events',
     frontPageImage: manuscriptsImage,
-    perspectiveDescHeight: 160,
     defaultActiveFacets: new Set(['prefLabel']),
+    defaultTab: 'table',
+    defaultInstancePageTab: 'table',
     tabs: [
       {
         id: 'table',

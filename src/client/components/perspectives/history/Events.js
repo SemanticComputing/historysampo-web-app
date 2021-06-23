@@ -1,27 +1,45 @@
-import React from 'react'
+import React, { lazy } from 'react'
 import PropTypes from 'prop-types'
+// import intl from 'react-intl-universal'
 import { Route, Redirect } from 'react-router-dom'
 import PerspectiveTabs from '../../main_layout/PerspectiveTabs'
-import ResultTable from '../../facet_results/ResultTable'
-// import LeafletMap from '../../facet_results/LeafletMap'
-// import Deck from '../../facet_results/Deck'
-import Export from '../../facet_results/Export'
-// import MigrationsMapLegend from './MigrationsMapLegend'
-// import { MAPBOX_ACCESS_TOKEN, MAPBOX_STYLE } from '../../../configs/sampo/GeneralConfig'
-// import ApexChart from '../../facet_results/ApexChart'
+// import {
+//   MAPBOX_ACCESS_TOKEN,
+//   MAPBOX_STYLE
+// } from '../../../configs/history/GeneralConfig'
 // import {
 //   createSingleLineChartData,
 //   createMultipleLineChartData
-// } from '../../../configs/sampo/ApexCharts/LineChartConfig'
+// } from '../../../configs/history/ApexCharts/LineChartConfig'
+// import { coseLayout, cytoscapeStyle, preprocess } from '../../../configs/history/Cytoscape.js/NetworkConfig'
+// import { layerConfigs, createPopUpContentMMM } from '../../../configs/history/Leaflet/LeafletConfig'
+const ResultTable = lazy(() => import('../../facet_results/ResultTable'))
+// const LeafletMap = lazy(() => import('../../facet_results/LeafletMap'))
+// const Deck = lazy(() => import('../../facet_results/Deck'))
+// const ApexChart = lazy(() => import('../../facet_results/ApexChart'))
+// const Network = lazy(() => import('../../facet_results/Network'))
+const Export = lazy(() => import('../../facet_results/Export'))
 
 const Events = props => {
-  const { rootUrl, perspective } = props
+  const { rootUrl, perspective /*, screenSize */ } = props
+  // const layerControlExpanded = screenSize === 'md' ||
+  //   screenSize === 'lg' ||
+  //   screenSize === 'xl'
+  // let popupMaxHeight = 320
+  // let popupMinWidth = 280
+  // let popupMaxWidth = 280
+  // if (screenSize === 'xs' || screenSize === 'sm') {
+  //   popupMaxHeight = 200
+  //   popupMinWidth = 150
+  //   popupMaxWidth = 150
+  // }
   return (
     <>
       <PerspectiveTabs
         routeProps={props.routeProps}
         tabs={props.perspective.tabs}
         screenSize={props.screenSize}
+        layoutConfig={props.layoutConfig}
       />
       <Route
         exact path={`${rootUrl}/${perspective.id}/faceted-search`}
@@ -31,8 +49,8 @@ const Events = props => {
         path={`${props.rootUrl}/${perspective.id}/faceted-search/table`}
         render={routeProps =>
           <ResultTable
-            data={props.facetResults}
-            facetUpdateID={props.facetData.facetUpdateID}
+            data={props.perspectiveState}
+            facetUpdateID={props.facetState.facetUpdateID}
             resultClass='events'
             facetClass='events'
             fetchPaginatedResults={props.fetchPaginatedResults}
@@ -41,18 +59,20 @@ const Events = props => {
             sortResults={props.sortResults}
             routeProps={routeProps}
             rootUrl={rootUrl}
+            layoutConfig={props.layoutConfig}
           />}
       />
       <Route
         path={`${rootUrl}/${perspective.id}/faceted-search/export`}
         render={() =>
           <Export
-            data={props.facetResults}
+            data={props.perspectiveState}
             resultClass='events'
             facetClass='events'
             pageType='facetResults'
             fetchPaginatedResults={props.fetchPaginatedResults}
             updatePage={props.updatePage}
+            layoutConfig={props.layoutConfig}
           />}
       />
     </>
@@ -60,28 +80,95 @@ const Events = props => {
 }
 
 Events.propTypes = {
-  facetResults: PropTypes.object.isRequired,
-  placesResults: PropTypes.object.isRequired,
-  leafletMapLayers: PropTypes.object.isRequired,
-  facetData: PropTypes.object.isRequired,
-  facetDataConstrainSelf: PropTypes.object,
-  fetchResults: PropTypes.func.isRequired,
-  clearGeoJSONLayers: PropTypes.func.isRequired,
-  fetchGeoJSONLayers: PropTypes.func.isRequired,
-  fetchGeoJSONLayersBackend: PropTypes.func.isRequired,
+  /**
+   * Faceted search configs and results of this perspective.
+   */
+  perspectiveState: PropTypes.object.isRequired,
+  /**
+    * Facet configs and values.
+    */
+  facetState: PropTypes.object.isRequired,
+  /**
+    * Facet values where facets constrain themselves, used for statistics.
+    */
+  facetConstrainSelfState: PropTypes.object.isRequired,
+  /**
+    * Leaflet map config and external layers.
+    */
+  leafletMapState: PropTypes.object.isRequired,
+  /**
+    * Redux action for fetching paginated results.
+    */
   fetchPaginatedResults: PropTypes.func.isRequired,
+  /**
+    * Redux action for fetching all results.
+    */
+  fetchResults: PropTypes.func.isRequired,
+  /**
+    * Redux action for fetching facet values for statistics.
+    */
+  fetchFacetConstrainSelf: PropTypes.func.isRequired,
+  /**
+    * Redux action for loading external GeoJSON layers.
+    */
+  fetchGeoJSONLayers: PropTypes.func.isRequired,
+  /**
+    * Redux action for loading external GeoJSON layers via backend.
+    */
+  fetchGeoJSONLayersBackend: PropTypes.func.isRequired,
+  /**
+    * Redux action for clearing external GeoJSON layers.
+    */
+  clearGeoJSONLayers: PropTypes.func.isRequired,
+  /**
+    * Redux action for fetching information about a single entity.
+    */
   fetchByURI: PropTypes.func.isRequired,
+  /**
+    * Redux action for updating the page of paginated results.
+    */
   updatePage: PropTypes.func.isRequired,
+  /**
+    * Redux action for updating the rows per page of paginated results.
+    */
   updateRowsPerPage: PropTypes.func.isRequired,
+  /**
+    * Redux action for sorting the paginated results.
+    */
   sortResults: PropTypes.func.isRequired,
-  routeProps: PropTypes.object.isRequired,
+  /**
+    * Redux action for updating the active selection or config of a facet.
+    */
+  showError: PropTypes.func.isRequired,
+  /**
+    * Redux action for showing an error
+    */
   updateFacetOption: PropTypes.func.isRequired,
+  /**
+    * Routing information from React Router.
+    */
+  routeProps: PropTypes.object.isRequired,
+  /**
+    * Perspective config.
+    */
   perspective: PropTypes.object.isRequired,
+  /**
+    * State of the animation, used by TemporalMap.
+    */
   animationValue: PropTypes.array.isRequired,
+  /**
+    * Redux action for animating TemporalMap.
+    */
   animateMap: PropTypes.func.isRequired,
+  /**
+    * Current screen size.
+    */
   screenSize: PropTypes.string.isRequired,
+  /**
+    * Root url of the application.
+    */
   rootUrl: PropTypes.string.isRequired,
-  showError: PropTypes.func.isRequired
+  layoutConfig: PropTypes.object.isRequired
 }
 
 export default Events

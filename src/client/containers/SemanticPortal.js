@@ -46,7 +46,7 @@ import {
   clientFSUpdateFacet,
   fetchKnowledgeGraphMetadata
 } from '../actions'
-import { filterResults } from '../selectors'
+// import { filterResults } from '../selectors'
 import { perspectiveConfig } from '../configs/history/PerspectiveConfig'
 import { perspectiveConfigOnlyInfoPages } from '../configs/history/PerspectiveConfigOnlyInfoPages'
 import { rootUrl, layoutConfig } from '../configs/history/GeneralConfig'
@@ -77,11 +77,11 @@ const TopBar = lazy(() => import('../components/perspectives/' + portalID + '/To
 const Main = lazy(() => import('../components/perspectives/' + portalID + '/Main'))
 const FacetedSearchPerspective = lazy(() => import('../components/perspectives/' + portalID + '/FacetedSearchPerspective'))
 const FullTextSearch = lazy(() => import('../components/perspectives/' + portalID + '/FullTextSearch'))
-const ClientFSPerspective = lazy(() => import('../components/perspectives/' + portalID + '/client_fs/ClientFSPerspective'))
-const ClientFSMain = lazy(() => import('../components/perspectives/' + portalID + '/client_fs/ClientFSMain'))
+// const ClientFSPerspective = lazy(() => import('../components/perspectives/' + portalID + '/client_fs/ClientFSPerspective'))
+// const ClientFSMain = lazy(() => import('../components/perspectives/' + portalID + '/client_fs/ClientFSMain'))
 const InstanceHomePage = lazy(() => import('../components/perspectives/' + portalID + '/InstanceHomePage'))
 const Footer = lazy(() => import('../components/perspectives/' + portalID + '/Footer'))
-const KnowledgeGraphMetadataTable = lazy(() => import('../components/perspectives/' + portalID + '/KnowledgeGraphMetadataTable'))
+// const KnowledgeGraphMetadataTable = lazy(() => import('../components/perspectives/' + portalID + '/KnowledgeGraphMetadataTable'))
 // ** Portal specific components and configs end **
 
 const useStyles = makeStyles(theme => ({
@@ -252,7 +252,7 @@ const SemanticPortal = props => {
   if (lgScreen) { screenSize = 'lg' }
   if (xlScreen) { screenSize = 'xl' }
   const rootUrlWithLang = `${rootUrl}/${props.options.currentLocale}`
-  const noClientFSResults = props.clientFSState.results == null
+  // const noClientFSResults = props.clientFSState.results == null
 
   useEffect(() => {
     document.title = intl.get('html.title')
@@ -530,7 +530,7 @@ const SemanticPortal = props => {
               />
             </Switch>
           )}
-          <Route
+          {/* <Route
             path={`${rootUrlWithLang}/clientFSPlaces/federated-search`}
             render={routeProps =>
               <>
@@ -583,7 +583,7 @@ const SemanticPortal = props => {
                 <Footer layoutConfig={layoutConfig} />
               </>}
 
-          />
+          /> */}
           {/* create routes for info buttons */}
           {/* <Route
               path={`${rootUrlWithLang}/feedback`}
@@ -598,11 +598,11 @@ const SemanticPortal = props => {
               <div className={classNames(classes.mainContainer, classes.textPageContainer)}>
                 <TextPage>
                   {intl.getHTML('aboutThePortalPartOne')}
-                  <KnowledgeGraphMetadataTable
+                  {/* <KnowledgeGraphMetadataTable
                     resultClass='perspective1KnowledgeGraphMetadata'
                     fetchKnowledgeGraphMetadata={props.fetchKnowledgeGraphMetadata}
                     knowledgeGraphMetadata={props.perspective1.knowledgeGraphMetadata}
-                  />
+                  /> */}
                   {intl.getHTML('aboutThePortalPartTwo')}
                 </TextPage>
               </div>}
@@ -621,7 +621,7 @@ const SemanticPortal = props => {
 }
 
 const mapStateToProps = state => {
-  const { clientFSResults, clientFSFacetValues } = filterResults(state.clientSideFacetedSearch)
+  // const { clientFSResults, clientFSFacetValues } = filterResults(state.clientSideFacetedSearch)
   return {
     events: state.events,
     eventsFacets: state.eventsFacets,
@@ -635,9 +635,9 @@ const mapStateToProps = state => {
     emloActorsFacetsConstrainSelf: state.emloActorsFacetsConstrainSelf,
     leafletMap: state.leafletMap,
     fullTextSearch: state.fullTextSearch,
-    clientFSState: state.clientSideFacetedSearch,
-    clientFSResults,
-    clientFSFacetValues,
+    // clientFSState: state.clientSideFacetedSearch,
+    // clientFSResults,
+    // clientFSFacetValues,
     animationValue: state.animation.value,
     options: state.options,
     error: state.error
