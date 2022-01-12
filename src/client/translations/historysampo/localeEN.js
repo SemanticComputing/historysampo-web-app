@@ -1,7 +1,7 @@
 export default {
   languageLabel: 'English',
   html: {
-    title: 'HistorySampo –  Finnish History on the Semantic Web',
+    title: 'HistorySampo – Finnish History on the Semantic Web',
     description: 'HistorySampo is a semantic portal for searching and browsing historical events based on times, places, types, themes and keywords.'
   },
   appTitle: {
@@ -12,24 +12,6 @@ export default {
       Finnish History on the Semantic Web
     `
   },
-  appDescription: `
-
-  `,
-  appDescription1: `
-    Sampo is a web service for searching and studying place names. The search results
-    can be viewed as a table, on maps, and as statistical distributions.
-    Historical and current background maps are providedf.
-  `,
-  appDescription2: `
-    Start by choosing source dataset(s) and input a place name on the search field.
-    Alternatively you can search by area.
-  `,
-  appDescription3: `
-
-  `,
-  appDescription4: `
-
-  `,
   selectPerspective: 'Select a perspective to search and browse the knowledge graph:',
   mainPageImageLicence: 'Images used under license from Shutterstock.com',
   topBar: {
