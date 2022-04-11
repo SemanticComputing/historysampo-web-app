@@ -2,14 +2,14 @@ import React from 'react'
 import PropTypes from 'prop-types'
 import intl from 'react-intl-universal'
 import classNames from 'classnames'
-import { withStyles } from '@material-ui/core/styles'
-import TableHead from '@material-ui/core/TableHead'
-import TableRow from '@material-ui/core/TableRow'
-import TableCell from '@material-ui/core/TableCell'
-import Tooltip from '@material-ui/core/Tooltip'
-import TableSortLabel from '@material-ui/core/TableSortLabel'
-import IconButton from '@material-ui/core/IconButton'
-import InfoIcon from '@material-ui/icons/InfoOutlined'
+import withStyles from '@mui/styles/withStyles'
+import TableHead from '@mui/material/TableHead'
+import TableRow from '@mui/material/TableRow'
+import TableCell from '@mui/material/TableCell'
+import Tooltip from '@mui/material/Tooltip'
+import TableSortLabel from '@mui/material/TableSortLabel'
+import IconButton from '@mui/material/IconButton'
+import InfoIcon from '@mui/icons-material/InfoOutlined'
 
 const styles = theme => ({
   headerCol: {
@@ -24,7 +24,8 @@ const styles = theme => ({
 })
 
 const ResultTableHead = props => {
-  const { classes, columns, sortBy, sortDirection, onSortBy } = props
+  const { classes, columns, sortBy, sortDirection, onSortBy, perspectiveConfig, resultClass } = props
+  const translationsID = perspectiveConfig.propertiesTranslationsID || resultClass
   return (
     <TableHead>
       <TableRow>
@@ -36,8 +37,8 @@ const ResultTableHead = props => {
               <td className={classes.headerCol} key='empty2' />
             )
           }
-          const label = intl.get(`perspectives.${props.resultClass}.properties.${column.id}.label`)
-          const description = intl.get(`perspectives.${props.resultClass}.properties.${column.id}.description`)
+          const label = intl.get(`perspectives.${translationsID}.properties.${column.id}.label`)
+          const description = intl.get(`perspectives.${translationsID}.properties.${column.id}.description`)
           return (
             <React.Fragment key={column.id}>
               {column.disableSort
@@ -50,7 +51,7 @@ const ResultTableHead = props => {
                       title={description}
                       enterDelay={300}
                     >
-                      <IconButton>
+                      <IconButton size='large'>
                         <InfoIcon />
                       </IconButton>
                     </Tooltip>
@@ -67,7 +68,7 @@ const ResultTableHead = props => {
                     >
                       <TableSortLabel
                         active={sortBy === column.id}
-                        direction={sortDirection}
+                        direction={sortBy === column.id ? sortDirection : 'asc'}
                         hideSortIcon
                         onClick={onSortBy(column.id)}
                       >
@@ -78,7 +79,7 @@ const ResultTableHead = props => {
                       title={description}
                       enterDelay={300}
                     >
-                      <IconButton>
+                      <IconButton size='large'>
                         <InfoIcon />
                       </IconButton>
                     </Tooltip>
@@ -98,8 +99,7 @@ ResultTableHead.propTypes = {
   columns: PropTypes.array.isRequired,
   onSortBy: PropTypes.func.isRequired,
   sortBy: PropTypes.string,
-  sortDirection: PropTypes.string,
-  routeProps: PropTypes.object.isRequired
+  sortDirection: PropTypes.string
 }
 
 export default withStyles(styles)(ResultTableHead)
